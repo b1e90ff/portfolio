@@ -44,7 +44,7 @@ jobs:
       packages: read
     steps:
       - uses: actions/checkout@v4
-      - uses: azure/setup-helm@v4
+      - uses: azure/setup-helm@v5
       - name: Authenticate OCI registry for dependency pulls
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" \
