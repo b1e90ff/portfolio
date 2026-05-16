@@ -87,9 +87,13 @@ pub fn footer(_state: &AppState, locale: &str, m: &Messages) -> Markup {
                     }
                 }
 
-                div class="mt-8 pt-6 border-t border-[var(--border-subtle)] text-center" {
+                div class="mt-8 pt-6 border-t border-[var(--border-subtle)] flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3" {
                     p class="text-xs text-[var(--text-tertiary)]" {
                         "© " (year) " " (m.footer.copyright)
+                    }
+                    span class="hidden sm:inline text-[var(--text-tertiary)]" aria-hidden="true" { "·" }
+                    p class="text-xs text-[var(--text-tertiary)]" {
+                        "v" (env!("CARGO_PKG_VERSION"))
                     }
                 }
             }

@@ -29,7 +29,7 @@ pub fn body(_state: &AppState, _locale: &str, m: &Messages) -> Markup {
                 }
 
                 section class="mb-16 border-t border-[var(--border-subtle)] pt-8" data-fade {
-                    h2 class="t-caption mb-5" { (m.about.bio.title) }
+                    h2 class="t-caption mb-5" { (m.about.about_title) }
                     p class="t-lead mb-8 whitespace-pre-line" { (m.about.bio.content) }
                     ul class="space-y-3" {
                         @for item in &m.about.bio.highlights {

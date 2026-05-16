@@ -22,6 +22,9 @@ pub fn list_body(_state: &AppState, locale: &str, m: &Messages) -> Markup {
         .flat_map(|p| p.technologies.iter().map(|s| s.as_str()))
         .collect();
 
+    let mut ordered: Vec<&ProjectItem> = m.projects.items.iter().collect();
+    ordered.sort_by(|a, b| b.date.cmp(&a.date));
+
     html! {
         section class="container mx-auto px-4 pt-32 sm:pt-40 pb-16" {
             div class="max-w-3xl mx-auto" {
@@ -66,7 +69,7 @@ pub fn list_body(_state: &AppState, locale: &str, m: &Messages) -> Markup {
                 }
 
                 div class="space-y-4" data-projects-grid {
-                    @for project in &m.projects.items {
+                    @for project in &ordered {
                         (project_card(locale, m, project))
                     }
                 }
