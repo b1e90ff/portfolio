@@ -20,6 +20,52 @@ env:
   RUSTDOCFLAGS: -D warnings
 
 jobs:
+  changes:
+    name: detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      helm: ${{ steps.filter.outputs.helm }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            helm:
+              - 'helm/**'
+
+  helm:
+    name: helm lint + template
+    needs: changes
+    if: needs.changes.outputs.helm == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: Authenticate OCI registry for dependency pulls
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+            | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Resolve subchart dependencies
+        run: helm dependency update helm
+      - name: Lint
+        run: helm lint helm --strict
+      - name: Render templates with default values
+        run: helm template ci helm > /tmp/rendered-default.yaml
+      - name: Render templates with production values
+        run: helm template ci helm -f helm/values-production.yaml > /tmp/rendered-prod.yaml
+      - name: Inspect rendered output for obvious errors
+        run: |
+          for f in /tmp/rendered-default.yaml /tmp/rendered-prod.yaml; do
+            if grep -E '<no value>|<nil>' "$f"; then
+              echo "::error file=$f::unresolved template placeholder"
+              exit 1
+            fi
+          done
+
   fmt:
     name: fmt
     runs-on: ubuntu-latest
