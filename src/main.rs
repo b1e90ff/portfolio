@@ -8,6 +8,8 @@ use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
 mod app;
 mod config;
+mod i18n;
+mod state;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -15,7 +17,12 @@ async fn main() -> Result<()> {
     init_tracing();
 
     let settings = config::Settings::from_env()?;
-    let router = app::router(settings.clone());
+    let i18n = i18n::I18n::load(&settings.locales, &settings.default_locale)
+        .context("loading translations")?;
+    info!(locales = ?i18n.locales(), default = i18n.default_locale(), "translations loaded");
+
+    let state = state::AppState::new(settings.clone(), i18n);
+    let router = app::router(state);
 
     let addr: SocketAddr = settings.bind.parse().context("invalid PORTFOLIO_BIND")?;
     let listener = TcpListener::bind(addr)

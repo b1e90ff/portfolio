@@ -1,0 +1,168 @@
+{
+  "metadata": {
+    "title": "",
+    "titleTemplate": "%s | Niklas Tat",
+    "description": "Niklas Tat — Backend Developer, DevOps Engineer and IT Manager from Switzerland. Cloud, Kubernetes, CI/CD, security & compliance.",
+    "manifest": {
+      "name": "tat.systems",
+      "shortName": "tat.systems",
+      "description": "Backend, DevOps and IT Management"
+    }
+  },
+  "navigation": {
+    "home": "Home",
+    "projects": "Projects",
+    "about": "About",
+    "contact": "Contact",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "skipToContent": "Skip to main content",
+    "toggleTheme": "Toggle theme"
+  },
+  "hero": {
+    "title": "Hi, I'm Niklas.",
+    "titlePrefix": "Hi, I'm",
+    "titleName": "Niklas",
+    "pageTitle": "Home",
+    "description": "Architecture that holds. Operations that run.",
+    "ctaProjects": "My Projects",
+    "ctaContact": "Contact",
+    "currentlyAt": "Currently at",
+    "openSource": "Open source on"
+  },
+  "about": {
+    "aboutTitle": "About Me",
+    "avatar": {
+      "image": "/images/about/niklas_tat.webp",
+      "alt": "Niklas Tat | Backend Developer, DevOps Engineer & IT-Manager"
+    },
+    "bio": {
+      "title": "Niklas Tat",
+      "content": "My fascination with programming developed at a young age and remains a deeply rooted passion that drives me to this day. For me, it's much more than just a profession - it's a continuous, stimulating challenge that significantly shapes my professional development. I now focus my expertise on the dynamic areas of DevOps and backend development, where I strategically apply my analytical skills and technical know-how to create efficient and stable systems.",
+      "highlights": [
+        "Strong focus on Security by Design in all phases of system development",
+        "Pragmatic and analytical approach to solving complex technical challenges",
+        "Establishment and optimization of productive remote work structures and cultures",
+        "Motivated by the freedom to adapt working hours to project requirements and personal peak performance phases to achieve optimal results"
+      ]
+    },
+    "approach": {
+      "title": "My Approach",
+      "content": "My approach combines thoughtful backend architecture with agile DevOps methodologies to optimize the entire lifecycle of applications - from conception through implementation to stable operation. I place the highest value on systems that excel through excellent code quality, inherent scalability, compelling performance, and robust high availability, whose integrity is proactively secured through comprehensive monitoring and precise alerting.",
+      "principles": [
+        { "title": "Code Base & Maintainability", "description": "I create sustainable software solutions through code quality, comprehensive test automation, and clear, well-documented architectures as the foundation for future developments" },
+        { "title": "Performance & Scalability", "description": "Designing systems from the ground up for optimal response times and efficient resource utilization, structuring them to flexibly grow with increasing requirements" },
+        { "title": "Proactive Operational Stability & High Availability", "description": "Ensuring maximum system availability and resilience through redundant architectures, continuous monitoring, meaningful alerting, and fast response mechanisms to disruptions" },
+        { "title": "Automation & Continuous Optimization", "description": "Maximizing efficiency and reliability through consistent automation of recurring processes and continuous improvement of systems based on metrics and feedback" }
+      ]
+    },
+    "interests": {
+      "title": "Outside of Work",
+      "content": "Off the keyboard, I find balance in activities with my dogs — fresh energy and new perspectives. That balance helps me stay technologically up-to-date. I keep engaging with new developments and methods, deepening my expertise in backend, DevOps, and IT management."
+    }
+  },
+  "skills": {
+    "title": "Skills",
+    "moreSkillsTooltip": "Continuous learning and development",
+    "categories": [
+      { "name": "Programming Languages", "icon": "languages", "skills": ["Java", "JavaScript", "Python"], "moreSkillsText": "and more" },
+      { "name": "Frameworks & Libraries", "icon": "frameworks", "skills": ["Angular", "Spring Boot", "Spring", "Swagger/OpenAPI", "Node.js", "JUnit", "Mockito", "Playwright", "Hibernate", "Flyway"], "moreSkillsText": "and more" },
+      { "name": "DevOps & Tools", "icon": "devops", "skills": ["Gradle", "Jenkins", "Maven", "Git", "GitHub", "GitHub Actions", "GitLab", "Kubernetes", "Helm", "Docker", "GitLab CI/CD", "Ansible", "SonarQube", "Notion", "Jira", "Confluence", "GitHub Pages", "GitFlow/GitHub Flow"], "moreSkillsText": "and more" },
+      { "name": "Cloud, Data & Systems", "icon": "cloud", "skills": ["Tomcat", "MariaDB", "MySQL", "Nginx", "Redis", "Kafka", "RabbitMQ", "AWS", "Google Cloud", "Digital Ocean", "Hetzner", "Cloudflare", "Prometheus", "Grafana", "Loadbalancer", "Service Mesh", "PostgreSQL", "SQLite", "Solr", "InfluxDB", "Nginx Proxy Manager", "MongoDB", "ProxMox", "HAProxy", "PfSense", "Rancher"], "moreSkillsText": "and more" }
+    ]
+  },
+  "experience": {
+    "title": "Experience",
+    "items": [
+      { "title": "Backend Developer, DevOps Engineer & IT-Manager", "company": "Eventfrog AG", "period": "2023 - Present", "description": "Development of backend services (microservices, breakdown of monolithic systems, etc.), DevOps (CI/CD, monitoring, logging, alerting, etc.), IT management (infrastructure, security, compliance, etc.)", "technologies": [] },
+      { "title": "Partner, Backend Developer & DevOps", "company": "ByteStudio UG", "period": "2017 - 2022", "description": "Design and development of architectures & applications (infrastructure, microservices, desktop/web, maintenance, etc.), process & test automation, as well as ensuring system reliability and project planning", "technologies": [] },
+      { "title": "Backend Developer", "company": "Freelancer", "period": "2015 - 2022", "description": "Design and development of architectures & applications (infrastructure, microservices, desktop/web, maintenance, etc.), process & test automation, as well as ensuring system reliability and project planning", "technologies": [] }
+    ]
+  },
+  "projects": {
+    "title": "Projects",
+    "description": "A selection of my work — production systems, open-source tools, and side projects across backend, DevOps, and infrastructure.",
+    "viewLive": "View Live",
+    "viewCode": "View Code",
+    "viewDocs": "Documentation",
+    "viewDetails": "View Details",
+    "backToProjects": "Back to Projects",
+    "searchPlaceholder": "Search projects...",
+    "statusAll": "Status (all)",
+    "technologyAll": "Technology (all)",
+    "noProjects": "No projects found.",
+    "noProjectsHint": "Try a different search term or reset the filters.",
+    "resetFilters": "Reset filters",
+    "technologiesTitle": "Technologies",
+    "highlightsTitle": "Highlights",
+    "items": [
+      { "id": "eventfrog", "title": "Eventfrog", "description": "Digital event management and ticketing platform.", "extendedDescription": "Eventfrog is a digital event management and ticketing solution that simplifies the entire process from publishing an event to ticket sales and admission. The platform provides the infrastructure to efficiently handle events and ticket sales", "technologies": [], "image": "/images/projects/eventfrog.webp", "liveUrl": "https://eventfrog.net", "status": "in-progress", "statusLabel": "In Progress", "date": "2023-02-01" },
+      { "id": "teamspeak-bot", "title": "Teamspeak Bot", "description": "This bot helps you to take care of your TeamSpeak server. This means that you can 'protect' certain groups, a support channel manager with automatic creation of support channels and much more", "extendedDescription": "Java-based admin bot with a modular architecture. Features include: protecting designated groups from unauthorized access, a support-channel manager that dynamically creates temporary channels per request, automatic cleanup routines, and additional admin tools. Runs as a service on the TeamSpeak host and communicates over the server-query API.", "technologies": ["Java", "Gradle"], "image": "/images/projects/teamspeak-bot.webp", "codeUrl": "https://github.com/b1e90ff/teamspeak-bot", "status": "completed", "statusLabel": "Completed", "date": "2022-09-28" },
+      { "id": "vogeez-authorization-service", "title": "Vogeez Authorization Service", "description": "This is an OAuth2 authorization service, which can be used to authenticate and register users", "extendedDescription": "Spring Boot-based OAuth2 server (Authorization Code & Client Credentials flows). Persistence with PostgreSQL via Hibernate, containerized with Docker, deployed to Kubernetes via Helm. Exposes endpoints for user registration, login, token issuing and token validation. Schema updates via Hibernate migrations, test coverage with JUnit and Mockito.", "technologies": ["Java", "Spring Boot", "Kubernetes", "Gradle", "Docker", "PostgreSQL", "Hibernate"], "image": "/images/projects/vogeez-authorization-service.webp", "codeUrl": "https://github.com/b1e90ff/vogeez-authorization-service", "status": "completed", "statusLabel": "Completed", "date": "2022-10-18" },
+      { "id": "stratospheric-balloon", "title": "Stratospheric Balloon Project", "description": "An ambitious team project to explore the stratosphere using a self-built weather balloon. After an intensive preparation phase with technical challenges, our probe successfully ascended into the upper stratosphere and delivered spectacular images of the Earth's curvature.", "extendedDescription": "Together as a team, we sent a self-built probe into the stratosphere via weather balloon to collect video footage and measurement data. Earlier launch attempts sharpened our understanding of material resilience and system reliability. The final launch succeeded: the balloon reached the upper stratosphere, the probe recorded footage of Earth's curvature and the blackness of space. After an adventurous landing, we recovered the probe and all data intact. A formative experience in applied engineering, project planning, and resilience.", "technologies": [], "image": "/images/projects/stratospheric-balloon.webp", "status": "completed", "statusLabel": "Completed", "date": "2017-06-26" },
+      { "id": "portfolio", "title": "Personal Portfolio Website", "description": "My personal portfolio, designed and built to showcase my projects, skills, and professional journey as a backend developer, DevOps engineer, and IT manager.", "extendedDescription": "This portfolio is a Rust server-side rendered site built on Axum and Maud with a typed JSON translation catalogue, dynamic OpenGraph card generation, and a hardened multi-stage Docker image. It is published as a Helm chart whose version stays in lockstep with the binary via semantic-release.", "technologies": ["Rust", "Axum", "Maud", "Tailwind CSS", "Tokio", "Lettre", "Docker", "Helm"], "image": "/images/projects/portfolio.webp", "status": "completed", "statusLabel": "Completed", "date": "2025-06-01" },
+      { "id": "helm-repository", "title": "Helm Repository", "description": "Helm chart monorepo for Kubernetes infrastructure and services.", "extendedDescription": "Centralized monorepo for Helm charts that bundles infrastructure components and production services. Charts are linted, scanned, and published to an OCI registry through GitHub Actions pipelines. Simplifies Kubernetes deployment lifecycle management with consistent versioning, shared templates, and automated publishing. Acts as the single source of truth for all self-hosted cluster workloads.", "technologies": ["Helm", "Kubernetes", "OCI Registry", "GitHub Actions", "YAML"], "image": "/images/projects/helm-repository.webp", "codeUrl": "https://github.com/b1e90ff/helm-repository", "status": "completed", "statusLabel": "Completed", "date": "2025-10-18" },
+      { "id": "action-semantic-release", "title": "Semantic Release Action", "description": "Composite GitHub Action for automated version management and release publishing using conventional commits.", "extendedDescription": "Composite GitHub Action that parses conventional commits, automatically computes SemVer versions, generates changelogs, and creates GitHub releases. Includes fine-tuned logic for major/minor/patch bumps with [skip ci] handling, optional branch protection, and configurable scopes. Used as the central release mechanism across multiple production repositories, replacing heavyweight Node-based solutions with a lean, transparent Bash/JS implementation.", "technologies": ["GitHub Actions", "Bash", "Node.js", "Conventional Commits", "SemVer"], "image": "/images/projects/action-semantic-release.webp", "codeUrl": "https://github.com/b1e90ff/action-semantic-release", "status": "completed", "statusLabel": "Completed", "date": "2026-04-05" },
+      { "id": "action-helm-chart", "title": "Helm Chart Action", "description": "Composite GitHub Action for the Helm chart lifecycle — scanning, linting, and OCI registry publishing.", "extendedDescription": "GitHub Action that orchestrates the full Helm chart lifecycle in CI: static linting (helm lint, kubeval), vulnerability scanning, version bumping, packaging, and pushing to an OCI registry. Provides a uniform, declarative chart-publishing workflow across repositories and reduces chart pipelines to a single workflow step. Embedded in the Helm Repository monorepo and several service pipelines.", "technologies": ["GitHub Actions", "Helm", "Kubernetes", "OCI Registry", "Bash"], "image": "/images/projects/action-helm-chart.webp", "codeUrl": "https://github.com/b1e90ff/action-helm-chart", "status": "completed", "statusLabel": "Completed", "date": "2026-04-05" }
+    ]
+  },
+  "contact": {
+    "title": "Contact",
+    "description": "Get in touch about Backend Development, DevOps, or IT Management (cloud, IAM, networking, security & compliance, internal IT). Replies promptly.",
+    "intro": "Have a project in mind or want to talk about backend development, DevOps, or IT management (cloud, IAM, networking, security & compliance, internal IT)? Freelance inquiries, technical sparring, or side projects are always welcome — I'll get back to you shortly.",
+    "channelHeading": "Pick your channel",
+    "formChannel": "Contact form",
+    "formChannelHint": "Send a message here — I'll get back to you shortly.",
+    "form": {
+      "name": "Name",
+      "email": "Email",
+      "subject": "Subject",
+      "message": "Message",
+      "send": "Send",
+      "sending": "Sending...",
+      "success": "Message sent successfully!",
+      "error": "Error sending message."
+    }
+  },
+  "footer": {
+    "impressum": "Impressum",
+    "privacy": "Privacy Policy",
+    "copyright": "tat.systems",
+    "contact": "Contact"
+  },
+  "social": {
+    "email": { "href": "mailto:niklas@tat.systems", "label": "Email" },
+    "imessage": { "href": "imessage:niklas@tat.systems", "label": "iMessage" },
+    "github": { "href": "https://github.com/b1e90ff", "label": "GitHub" },
+    "linkedin": { "href": "https://linkedin.com/in/niklas-tat-5219a024b", "label": "LinkedIn" }
+  },
+  "impressum": {
+    "title": "Impressum",
+    "sections": [
+      { "title": "Contact Address and Responsibility", "type": "contact", "lines": ["Niklas Tat", "Mattenstrasse 28", "4632 Trimbach", "Switzerland", "", "Email: niklas@tat.systems"] },
+      { "title": "Disclaimer", "type": "text", "content": "The author assumes no responsibility for the accuracy, completeness, timeliness, reliability, and completeness of the information. Liability claims against the author for damages of material or immaterial nature arising from access to or use or non-use of the published information, misuse of the connection, or technical disruptions are excluded.\n\nReferences and links to third-party websites are outside our area of responsibility. Any responsibility for such websites is disclaimed. Access and use of such websites is at the user's own risk." }
+    ]
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "sections": [
+      { "title": "1. Privacy at a Glance", "type": "subsection", "subsections": [{ "title": "General Information", "type": "text", "content": "The following information provides a simple overview of what happens to your personal data when you visit this website. Personal data is any data that can be used to personally identify you. The responsible party for data processing on this website can be found in the next section." }] },
+      { "title": "2. Responsible Party and Hosting", "type": "subsection", "subsections": [{ "title": "Responsible Party", "type": "text", "content": "Responsible for data processing under data protection laws is:\n\nNiklas Tat\nMattenstrasse 28\n4632 Trimbach\nSwitzerland\nEmail: niklas@tat.systems" }, { "title": "External Hosting with Hetzner", "type": "text", "content": "This website is hosted externally by Hetzner Online GmbH, Industriestr. 25, 91710 Gunzenhausen, Germany. The personal data collected on this website is stored on Hetzner's servers. This may include IP addresses, contact requests, meta and communication data, contact details, names, and other data generated through a website.\n\nHosting is carried out for the purpose of secure, fast, and efficient provision of our online services by a professional provider. This represents a legitimate interest. We have concluded a data processing agreement (DPA) with Hetzner that ensures data protection-compliant processing." }] },
+      { "title": "3. Content Delivery Network (CDN) via Cloudflare", "type": "text", "content": "We use the services of Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA, to increase the security and speed of our website. Cloudflare protects the website from attacks and optimizes loading times by acting as a Content Delivery Network (CDN).\n\nFor this purpose, all data traffic between your browser and our website is routed through Cloudflare's infrastructure, processing your IP address and other usage data. Data transfer to the USA is possible. Cloudflare is certified under the EU-U.S. Data Privacy Framework, which ensures an adequate level of data protection. Usage is based on our legitimate interest in a secure and performant website." },
+      { "title": "4. Collection and Use of Data", "type": "subsection", "subsections": [{ "title": "Server Log Files", "type": "text_list", "content": "Our host (Hetzner) automatically collects and stores information in so-called server log files, which your browser automatically transmits. These are:", "items": ["Browser type and browser version", "Operating system used", "Referrer URL (the previously visited page)", "Hostname of the accessing computer", "Time of server request", "IP address"] }] },
+      { "title": "5. Contact Form", "type": "text", "content": "If you send us inquiries via the contact form, your details from the inquiry form, including the contact data you provided, will be stored by us for processing the inquiry and in case of follow-up questions.\n\nFor the technical sending of emails from the form, we use the SendGrid service by Twilio Inc., USA. The necessary data is transmitted to SendGrid for this purpose. Data transfer to the USA is possible. Twilio is also certified under the EU-U.S. Data Privacy Framework. Processing your inquiry represents a legitimate interest or serves the performance of pre-contractual measures." },
+      { "title": "6. Your Rights", "type": "text_list", "content": "You have the right to receive information about the origin, recipient, and purpose of your stored personal data free of charge at any time. You also have the right to request correction or deletion of this data. Please contact the responsible party mentioned in section 2 for this purpose.\n\nYou have the following rights:", "items": ["Right to information", "Right to correction", "Right to deletion ('right to be forgotten')", "Right to restriction of processing", "Right to data portability", "Right to object to processing", "Right to complain to a supervisory authority (for Switzerland: FDPIC)"] },
+      { "title": "7. SSL/TLS Encryption", "type": "text", "content": "This site uses SSL/TLS encryption for security reasons and to protect the transmission of confidential content, such as inquiries you send to us as the site operator. You can recognize an encrypted connection by the address line of the browser changing from \"http://\" to \"https://\" and by the lock symbol in your browser line." }
+    ]
+  },
+  "structuredData": {
+    "person": { "name": "Niklas Tat", "jobTitle": "Backend Developer, DevOps Engineer & IT-Manager", "description": "My fascination with programming developed at a young age and remains a deeply rooted passion that drives me to this day. For me, it's much more than just a profession – a continuous, stimulating challenge. My professional focus lies on backend development, DevOps, and IT management, where I apply my analytical skills to create thoughtful architectures, automated processes, and reliable IT operations.", "image": "/tat.webp", "sameAs": ["https://github.com/b1e90ff", "https://linkedin.com/in/niklas-tat-5219a024b"], "email": "niklas@tat.systems" },
+    "website": { "name": "Niklas Tat | Backend, DevOps & IT Management", "description": "Welcome, discover a small part of my work. Feel free to contact me." },
+    "portfolio": { "name": "Portfolio | Backend, DevOps & IT Management", "description": "A curated collection of projects demonstrating my competencies: From modernizing monolithic applications to microservices, building scalable API platforms, to implementing end-to-end automation and observability solutions.", "dateCreated": "2025-06-10", "genre": "Technical Portfolio", "about": ["Backend Development", "DevOps Engineering", "System Architecture", "Microservices & API Design", "Cloud Architecture", "Infrastructure as Code (IaC)", "CI/CD Automation", "Kubernetes & Docker", "High Availability & Scalability"] }
+  },
+  "notfound": {
+    "title": "Page Not Found",
+    "message": "The page you are looking for does not exist. Please check the URL or navigate to the homepage.",
+    "back": "Back to Homepage"
+  }
+}
