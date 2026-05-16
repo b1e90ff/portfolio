@@ -20,6 +20,7 @@ pub fn router(state: AppState) -> Router {
         .route("/healthz", get(health))
         .route("/", get(root_redirect))
         .route("/{locale}", get(pages::home))
+        .route("/{locale}/about", get(pages::about))
         .with_state(state);
 
     let images = Router::new()
@@ -94,4 +95,111 @@ async fn root_redirect(
     axum::extract::State(state): axum::extract::State<AppState>,
 ) -> axum::response::Redirect {
     axum::response::Redirect::permanent(&format!("/{}", state.settings.default_locale))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::Settings;
+    use crate::i18n::I18n;
+    use axum::body::Body;
+    use axum::http::{Request, StatusCode};
+    use http_body_util::BodyExt;
+    use tower::ServiceExt;
+
+    fn test_app() -> Router {
+        let settings = Settings {
+            bind: "0.0.0.0:0".into(),
+            base_url: "https://example.test".into(),
+            default_locale: "en-US".into(),
+            locales: vec!["en-US".into(), "de-DE".into()],
+        };
+        let i18n = I18n::load(&settings.locales, &settings.default_locale).unwrap();
+        let state = AppState::new(settings, i18n);
+        router(state)
+    }
+
+    async fn get(app: Router, path: &str) -> (StatusCode, String) {
+        let res = app
+            .oneshot(Request::builder().uri(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        let status = res.status();
+        let bytes = res.into_body().collect().await.unwrap().to_bytes();
+        let body = String::from_utf8(bytes.to_vec()).unwrap_or_default();
+        (status, body)
+    }
+
+    #[tokio::test]
+    async fn healthz_returns_ok() {
+        let (status, body) = get(test_app(), "/healthz").await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(body, "ok");
+    }
+
+    #[tokio::test]
+    async fn root_redirects_to_default_locale() {
+        let res = test_app()
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::PERMANENT_REDIRECT);
+        assert_eq!(res.headers()["location"], "/en-US");
+    }
+
+    #[tokio::test]
+    async fn en_us_home_renders() {
+        let (status, body) = get(test_app(), "/en-US").await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(body.contains("<!DOCTYPE html>"));
+        assert!(body.contains(r#"lang="en-US""#));
+        assert!(body.contains("Niklas"));
+        assert!(body.contains(r#"<link rel="canonical" href="https://example.test/en-US">"#));
+    }
+
+    #[tokio::test]
+    async fn de_de_home_uses_german_copy() {
+        let (status, body) = get(test_app(), "/de-DE").await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(body.contains(r#"lang="de-DE""#));
+        assert!(body.contains("Architektur, die hält"));
+    }
+
+    #[tokio::test]
+    async fn about_page_renders() {
+        let (status, body) = get(test_app(), "/en-US/about").await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(body.contains("About Me"));
+        assert!(body.contains(r#"<link rel="canonical" href="https://example.test/en-US/about">"#));
+    }
+
+    #[tokio::test]
+    async fn unknown_locale_falls_back() {
+        let res = test_app()
+            .oneshot(Request::builder().uri("/xx-XX").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::PERMANENT_REDIRECT);
+    }
+
+    #[tokio::test]
+    async fn security_headers_present() {
+        let res = test_app()
+            .oneshot(Request::builder().uri("/healthz").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        let h = res.headers();
+        assert_eq!(h.get("x-frame-options").unwrap(), "DENY");
+        assert_eq!(h.get("x-content-type-options").unwrap(), "nosniff");
+        assert!(h.contains_key("referrer-policy"));
+        assert!(h.contains_key("permissions-policy"));
+    }
+
+    #[tokio::test]
+    async fn hreflang_alternates_present_on_home() {
+        let (_, body) = get(test_app(), "/en-US").await;
+        assert!(body.contains(r#"hreflang="en-US""#));
+        assert!(body.contains(r#"hreflang="de-DE""#));
+        assert!(body.contains(r#"hreflang="x-default""#));
+    }
 }

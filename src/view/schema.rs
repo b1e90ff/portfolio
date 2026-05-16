@@ -184,7 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn organization_contains_name_and_sameAs() {
+    fn organization_contains_name_and_same_as() {
         let state = fixture_state();
         let m = state.i18n.get("en-US");
         let v = organization(&state, "en-US", &m);
