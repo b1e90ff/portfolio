@@ -33,6 +33,7 @@ WORKDIR /app
 COPY --from=builder --chown=portfolio:portfolio /build/target/release/portfolio /app/portfolio
 COPY --from=builder --chown=portfolio:portfolio /build/public /app/public
 COPY --from=builder --chown=portfolio:portfolio /build/i18n   /app/i18n
+COPY --from=builder --chown=portfolio:portfolio /build/assets /app/assets
 
 ENV PORTFOLIO_BIND=0.0.0.0:3000 \
     PORTFOLIO_LOG=info,portfolio=info,tower_http=info \
