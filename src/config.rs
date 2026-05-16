@@ -1,6 +1,6 @@
 use std::env;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub struct Settings {
@@ -43,6 +43,5 @@ impl Settings {
             default_locale,
             locales,
         })
-        .context("portfolio settings")
     }
 }
