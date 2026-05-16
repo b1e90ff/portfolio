@@ -1,24 +1,69 @@
 # portfolio
 
-Personal portfolio of Niklas Tat — Rust SSR with Axum, Maud, Tailwind v4.
+Server-side rendered personal portfolio built in Rust with Axum, Maud and Tailwind CSS v4.
 
-## Run
+## How It Works
 
+The server renders every page on each request from a typed JSON catalogue under `i18n/<locale>.json` and a Tailwind-compiled stylesheet. Locales are routed under `/<locale>/<path>` with the root redirecting to the configured default. SEO surfaces (sitemap, robots, site.webmanifest, hreflang, OpenGraph, JSON-LD) are emitted server-side per locale. The contact form posts to `/api/contact`, which validates input, rate-limits per IP, and delivers via SMTP through lettre.
+
+## Quick Start
+
+```bash
+cp .env.example .env
+make css
+make run
 ```
-make css      # build the stylesheet
-make run      # debug server on :3000
-```
 
-## Production
+Visit http://localhost:3000.
 
-```
+### Production
+
+```bash
 docker compose up -d --build
 ```
 
-Configurable via env (see `.env.example`).
+Multi-stage image, non-root uid 10001, read-only rootfs, all caps dropped.
 
-## Tests
+### Adding a Locale
 
+Drop a new catalogue at `i18n/<locale>.json` mirroring the shape of `en-US.json`, then add the locale code to `PORTFOLIO_LOCALES`.
+
+## Routes
+
+| Path | Purpose |
+|---|---|
+| `/` | Redirect to `/<default-locale>` |
+| `/<locale>` | Home |
+| `/<locale>/about` | About |
+| `/<locale>/projects` | Project list, client-side filterable |
+| `/<locale>/projects/<id>` | Project detail |
+| `/<locale>/contact` | Contact form |
+| `/<locale>/privacy` · `/<locale>/impressum` | Legal pages |
+| `POST /api/contact` | JSON submission, lettre SMTP |
+| `GET /api/health` · `/healthz` | Liveness |
+| `/sitemap.xml` · `/robots.txt` · `/site.webmanifest` | SEO endpoints |
+
+## Configuration
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `PORTFOLIO_BIND` | no | `0.0.0.0:3000` | Listen address |
+| `PORTFOLIO_BASE_URL` | no | `http://localhost:3000` | Canonical URL used for OG, sitemap, hreflang |
+| `PORTFOLIO_DEFAULT_LOCALE` | no | `en-US` | Redirect target for `/` |
+| `PORTFOLIO_LOCALES` | no | `en-US,de-DE` | Comma-separated catalogues to load |
+| `PORTFOLIO_LOG` | no | `info,portfolio=debug,tower_http=info` | `tracing_subscriber` filter |
+| `SMTP_HOST` | for contact form | — | If unset, `/api/contact` returns 503 |
+| `SMTP_PORT` | no | `587` | |
+| `SMTP_USERNAME` | for contact form | — | |
+| `SMTP_PASSWORD` | for contact form | — | |
+| `SMTP_FROM` | no | `SMTP_USERNAME` | Sender mailbox |
+| `SMTP_TO` | no | `SMTP_USERNAME` | Recipient mailbox |
+| `SMTP_USE_STARTTLS` | no | `true` | Set `false` for implicit TLS on port 465 |
+
+## Quality Gates
+
+```bash
+make check    # fmt --check + clippy -D warnings + tests
 ```
-make check    # fmt + clippy + tests
-```
+
+CI on every push and PR runs fmt, clippy, test, release build, cargo-audit, and a Docker build.
