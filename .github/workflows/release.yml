@@ -86,41 +86,19 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  sync-helm-chart:
+  publish-helm-chart:
     needs: [test, semantic-release, docker]
     if: ${{ needs.semantic-release.outputs.new-release-published == 'true' && github.event.inputs.dry_run != 'true' }}
     runs-on: ubuntu-latest
-    env:
-      VERSION: ${{ needs.semantic-release.outputs.new-release-version }}
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - name: Generate app token for helm-repository
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          owner: b1e90ff
-          repositories: helm-repository
       - uses: actions/checkout@v4
         with:
-          repository: b1e90ff/helm-repository
-          token: ${{ steps.app-token.outputs.token }}
-          path: helm-repository
-      - name: Bump portfolio-service chart
-        working-directory: helm-repository
-        run: |
-          yq -i ".version = \"${VERSION}\"" portfolio-service/Chart.yaml
-          yq -i ".appVersion = \"${VERSION}\"" portfolio-service/Chart.yaml
-          yq -i ".\"web-service\".image.tag = \"${VERSION}\"" portfolio-service/values.yaml
-      - name: Commit and push
-        working-directory: helm-repository
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add portfolio-service/Chart.yaml portfolio-service/values.yaml
-          if git diff --cached --quiet; then
-            echo "no chart changes to commit"
-            exit 0
-          fi
-          git commit -m "feat(portfolio-service): sync chart and image to portfolio v${VERSION}"
-          git push origin main
+          ref: v${{ needs.semantic-release.outputs.new-release-version }}
+      - uses: b1e90ff/action-helm-chart@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          mode: release
+          chart-directory: helm

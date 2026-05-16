@@ -1,0 +1,31 @@
+web-service:
+  image:
+    repository: ghcr.io/b1e90ff/portfolio
+    tag: "1.0.1"
+    pullPolicy: IfNotPresent
+
+  imagePullSecrets:
+    - name: github-credentials
+
+  replicaCount: 1
+
+  extraEnv:
+    - name: PORTFOLIO_BASE_URL
+      value: https://tat.systems
+
+  externalRouting:
+    enabled: true
+    hostname: ""
+    gateway:
+      name: istio-gateway
+      namespace: istio-gateway
+
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+      ephemeral-storage: 2Gi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+      ephemeral-storage: 1Gi

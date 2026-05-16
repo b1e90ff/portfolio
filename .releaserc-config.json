@@ -1,8 +1,13 @@
 [
   ["@semantic-release/exec", {
-    "prepareCmd": "cargo set-version ${nextRelease.version} && cargo update --workspace --offline"
+    "prepareCmd": "cargo set-version ${nextRelease.version} && cargo update --workspace --offline && yq -i \".version = \\\"${nextRelease.version}\\\"\" helm/Chart.yaml && yq -i \".appVersion = \\\"${nextRelease.version}\\\"\" helm/Chart.yaml && yq -i \".\\\"web-service\\\".image.tag = \\\"${nextRelease.version}\\\"\" helm/values-production.yaml"
   }],
   ["@semantic-release/git", {
-    "assets": ["Cargo.toml", "Cargo.lock"]
+    "assets": [
+      "Cargo.toml",
+      "Cargo.lock",
+      "helm/Chart.yaml",
+      "helm/values-production.yaml"
+    ]
   }]
 ]

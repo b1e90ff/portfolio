@@ -28,6 +28,15 @@ Multi-stage image, non-root uid 10001, read-only rootfs, all caps dropped.
 
 Drop a new catalogue at `i18n/<locale>.json` mirroring the shape of `en-US.json`, then add the locale code to `PORTFOLIO_LOCALES`.
 
+## Helm Chart
+
+The `portfolio-service` Helm chart lives under `helm/` so the chart version, `appVersion` and the deployed image tag are bumped in lockstep with the Rust binary by a single `semantic-release` run. Each release publishes:
+
+- `ghcr.io/b1e90ff/portfolio:<version>` — application image
+- `ghcr.io/b1e90ff/charts/portfolio-service:<version>` — Helm chart
+
+The chart wraps the generic `web-service` and `istio-sidecar-configurator` charts from `oci://ghcr.io/b1e90ff/charts`. Environment-specific overrides live in `helm/values-production.yaml`. CI runs `helm lint --strict` and renders both value files whenever anything under `helm/**` changes.
+
 ## Routes
 
 | Path | Purpose |

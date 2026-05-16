@@ -1,0 +1,19 @@
+web-service:
+  replicaCount: 1
+
+  service:
+    port: 80
+    targetPort: 3000
+
+  healthCheck:
+    enabled: false
+
+  externalRouting:
+    enabled: false
+
+  extraEnvFrom:
+    - secretRef:
+        name: portfolio-smtp-credentials
+
+istio-sidecar-configurator:
+  enableIstioInjection: true
