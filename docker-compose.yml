@@ -1,0 +1,36 @@
+services:
+  portfolio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: portfolio:latest
+    container_name: portfolio
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORTFOLIO_BIND: 0.0.0.0:3000
+      PORTFOLIO_BASE_URL: ${PORTFOLIO_BASE_URL:-http://localhost:3000}
+      PORTFOLIO_DEFAULT_LOCALE: ${PORTFOLIO_DEFAULT_LOCALE:-en-US}
+      PORTFOLIO_LOCALES: ${PORTFOLIO_LOCALES:-en-US,de-DE}
+      PORTFOLIO_LOG: ${PORTFOLIO_LOG:-info,portfolio=info,tower_http=info}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_TO: ${SMTP_TO:-}
+      SMTP_USE_STARTTLS: ${SMTP_USE_STARTTLS:-true}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
