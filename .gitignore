@@ -10,10 +10,14 @@ yarn.lock
 pnpm-lock.yaml
 
 # Build output
+/public/css/
 /static/css/build.css
 /static/js/*.bundle.js
 /dist
 /build
+
+# Cached toolchain binaries
+/bin/
 
 # Logs & runtime
 *.log
