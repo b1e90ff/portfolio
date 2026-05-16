@@ -1,9 +1,11 @@
 use axum::Json;
 use axum::extract::State;
-use axum::http::{HeaderValue, header};
+use axum::http::{HeaderValue, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use serde_json::json;
 
+use crate::locale::LocaleCtx;
+use crate::og;
 use crate::state::AppState;
 
 const STATIC_PATHS: &[(&str, &str, &str)] = &[
@@ -104,6 +106,27 @@ pub async fn robots(State(state): State<AppState>) -> Response {
         body,
     )
         .into_response()
+}
+
+pub async fn opengraph_image(State(_state): State<AppState>, ctx: LocaleCtx) -> Response {
+    let m = ctx.messages.as_ref();
+    match og::render_png(&ctx.locale, m) {
+        Ok(bytes) => (
+            [
+                (header::CONTENT_TYPE, HeaderValue::from_static("image/png")),
+                (
+                    header::CACHE_CONTROL,
+                    HeaderValue::from_static("public, max-age=3600, stale-while-revalidate=86400"),
+                ),
+            ],
+            bytes,
+        )
+            .into_response(),
+        Err(err) => {
+            tracing::error!(?err, "og image render failed");
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+    }
 }
 
 pub async fn manifest(State(state): State<AppState>) -> Response {

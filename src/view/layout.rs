@@ -63,7 +63,7 @@ pub fn layout(p: Page<'_>) -> Markup {
     let og_image_url = p
         .og_image
         .clone()
-        .unwrap_or_else(|| format!("{base_url}/tat.webp"));
+        .unwrap_or_else(|| format!("{base_url}/{}/opengraph-image", p.locale));
 
     let mut schemas = vec![
         schema::organization(p.state, p.locale, p.messages),
