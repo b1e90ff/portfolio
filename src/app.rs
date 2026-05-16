@@ -2,9 +2,12 @@ use std::time::Duration;
 
 use axum::Router;
 use axum::routing::get;
+use http::HeaderValue;
+use http::header::CACHE_CONTROL;
 use tower_http::catch_panic::CatchPanicLayer;
 use tower_http::compression::CompressionLayer;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
+use tower_http::services::ServeDir;
 use tower_http::set_header::SetResponseHeaderLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
@@ -12,35 +15,65 @@ use tower_http::trace::TraceLayer;
 use crate::config::Settings;
 
 pub fn router(settings: Settings) -> Router {
-    let security_headers = [
-        ("x-frame-options", "DENY"),
-        ("x-content-type-options", "nosniff"),
-        ("referrer-policy", "strict-origin-when-cross-origin"),
-        (
-            "permissions-policy",
-            "camera=(), microphone=(), geolocation=()",
-        ),
-    ];
-
-    let mut router = Router::new()
+    let pages = Router::new()
         .route("/healthz", get(health))
         .route("/", get(root_redirect));
 
-    for (name, value) in security_headers {
-        router = router.layer(SetResponseHeaderLayer::if_not_present(
-            name.parse().expect("static header name"),
-            value.parse().expect("static header value"),
-        ));
-    }
+    let images = Router::new()
+        .fallback_service(serve_dir("public/images"))
+        .layer(immutable_cache());
 
-    router
-        .layer(CompressionLayer::new())
+    let public_assets = Router::new()
+        .fallback_service(serve_dir("public"))
+        .layer(short_cache());
+
+    pages
+        .nest("/images", images)
+        .fallback_service(public_assets)
+        .layer(SetResponseHeaderLayer::if_not_present(
+            http::header::X_FRAME_OPTIONS,
+            HeaderValue::from_static("DENY"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            http::header::X_CONTENT_TYPE_OPTIONS,
+            HeaderValue::from_static("nosniff"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            http::header::REFERRER_POLICY,
+            HeaderValue::from_static("strict-origin-when-cross-origin"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            http::HeaderName::from_static("permissions-policy"),
+            HeaderValue::from_static("camera=(), microphone=(), geolocation=()"),
+        ))
+        .layer(CompressionLayer::new().gzip(true).br(true))
         .layer(TimeoutLayer::new(Duration::from_secs(15)))
         .layer(CatchPanicLayer::new())
         .layer(PropagateRequestIdLayer::x_request_id())
         .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
         .layer(TraceLayer::new_for_http())
         .with_state(settings)
+}
+
+fn serve_dir(path: &str) -> ServeDir {
+    ServeDir::new(path)
+        .precompressed_gzip()
+        .precompressed_br()
+        .append_index_html_on_directories(false)
+}
+
+fn immutable_cache() -> SetResponseHeaderLayer<HeaderValue> {
+    SetResponseHeaderLayer::if_not_present(
+        CACHE_CONTROL,
+        HeaderValue::from_static("public, max-age=31536000, immutable"),
+    )
+}
+
+fn short_cache() -> SetResponseHeaderLayer<HeaderValue> {
+    SetResponseHeaderLayer::if_not_present(
+        CACHE_CONTROL,
+        HeaderValue::from_static("public, max-age=3600, must-revalidate"),
+    )
 }
 
 async fn health() -> &'static str {
