@@ -17,14 +17,16 @@ pub fn header(state: &AppState, locale: &str, path: &str, m: &Messages) -> Marku
             style="background-color: var(--nav-bg);" {
             div class="max-w-6xl mx-auto px-4 sm:px-6" {
                 div class="flex justify-between items-center h-14" {
-                    a href=(format!("/{locale}")) class="inline-flex items-center -ml-1 p-1.5 rounded-md"
-                      aria-label="Niklas Tat" {
-                        img src=(asset("/tat.webp")) alt="Niklas Tat" width="28" height="28" loading="eager" decoding="async";
-                    }
+                    div class="flex items-center gap-6" {
+                        a href=(format!("/{locale}")) class="inline-flex items-center -ml-1 p-1.5 rounded-md"
+                          aria-label="Niklas Tat" {
+                            img src=(asset("/tat.webp")) alt="Niklas Tat" width="28" height="28" loading="eager" decoding="async";
+                        }
 
-                    div class="hidden sm:flex items-center gap-1 ml-6" {
-                        @for (label, p) in nav {
-                            (nav_link(locale, path, label, p))
+                        div class="hidden sm:flex items-center gap-1" {
+                            @for (label, p) in nav {
+                                (nav_link(locale, path, label, p))
+                            }
                         }
                     }
 
