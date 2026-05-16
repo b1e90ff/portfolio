@@ -39,8 +39,14 @@ pub async fn sitemap(State(state): State<AppState>) -> Response {
 
     (
         [
-            (header::CONTENT_TYPE, HeaderValue::from_static("application/xml; charset=utf-8")),
-            (header::CACHE_CONTROL, HeaderValue::from_static("public, s-maxage=86400, stale-while-revalidate=604800")),
+            (
+                header::CONTENT_TYPE,
+                HeaderValue::from_static("application/xml; charset=utf-8"),
+            ),
+            (
+                header::CACHE_CONTROL,
+                HeaderValue::from_static("public, s-maxage=86400, stale-while-revalidate=604800"),
+            ),
         ],
         xml,
     )
@@ -86,8 +92,14 @@ pub async fn robots(State(state): State<AppState>) -> Response {
 
     (
         [
-            (header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8")),
-            (header::CACHE_CONTROL, HeaderValue::from_static("public, s-maxage=86400, stale-while-revalidate=604800")),
+            (
+                header::CONTENT_TYPE,
+                HeaderValue::from_static("text/plain; charset=utf-8"),
+            ),
+            (
+                header::CACHE_CONTROL,
+                HeaderValue::from_static("public, s-maxage=86400, stale-while-revalidate=604800"),
+            ),
         ],
         body,
     )
@@ -139,10 +151,10 @@ pub async fn manifest(State(state): State<AppState>) -> Response {
 
 #[cfg(test)]
 mod tests {
+    use crate::app::router;
     use crate::config::Settings;
     use crate::i18n::I18n;
     use crate::state::AppState;
-    use crate::app::router;
     use axum::body::Body;
     use axum::http::{Request, StatusCode};
     use http_body_util::BodyExt;
@@ -168,7 +180,11 @@ mod tests {
         let status = res.status();
         let headers = res.headers().clone();
         let bytes = res.into_body().collect().await.unwrap().to_bytes();
-        (status, String::from_utf8(bytes.to_vec()).unwrap_or_default(), headers)
+        (
+            status,
+            String::from_utf8(bytes.to_vec()).unwrap_or_default(),
+            headers,
+        )
     }
 
     #[tokio::test]
@@ -176,11 +192,23 @@ mod tests {
         let (status, body, h) = body_of(app(), "/sitemap.xml").await;
         assert_eq!(status, StatusCode::OK);
         assert!(
-            h.get("content-type").unwrap().to_str().unwrap().contains("application/xml"),
-            "content-type was {:?}", h.get("content-type")
+            h.get("content-type")
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .contains("application/xml"),
+            "content-type was {:?}",
+            h.get("content-type")
         );
         for locale in ["en-US", "de-DE"] {
-            for path in ["", "/about", "/projects", "/contact", "/privacy", "/impressum"] {
+            for path in [
+                "",
+                "/about",
+                "/projects",
+                "/contact",
+                "/privacy",
+                "/impressum",
+            ] {
                 let expected = format!("<loc>https://example.test/{locale}{path}</loc>");
                 assert!(body.contains(&expected), "missing {expected}");
             }
@@ -202,7 +230,11 @@ mod tests {
         let (status, body, h) = body_of(app(), "/site.webmanifest").await;
         assert_eq!(status, StatusCode::OK);
         assert!(
-            h.get("content-type").unwrap().to_str().unwrap().starts_with("application/manifest+json"),
+            h.get("content-type")
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .starts_with("application/manifest+json"),
         );
         assert!(body.contains(r#""name":"tat.systems""#));
         assert!(body.contains("android-chrome-512x512.png"));

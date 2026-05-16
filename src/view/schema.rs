@@ -204,7 +204,13 @@ mod tests {
     fn web_page_carries_inlanguage() {
         let state = fixture_state();
         let v = web_page(
-            &state, "de-DE", "/about", "About", "About description", "AboutPage", "Niklas Tat",
+            &state,
+            "de-DE",
+            "/about",
+            "About",
+            "About description",
+            "AboutPage",
+            "Niklas Tat",
         );
         assert_eq!(v["inLanguage"], "de-DE");
         assert_eq!(v["@type"], "AboutPage");

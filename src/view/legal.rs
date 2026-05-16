@@ -92,7 +92,11 @@ fn privacy_section(section: &PrivacySection) -> Markup {
                 p class="t-body whitespace-pre-line" { (content) }
             }
         },
-        PrivacySection::TextList { title, content, items } => html! {
+        PrivacySection::TextList {
+            title,
+            content,
+            items,
+        } => html! {
             section data-fade {
                 h2 class="text-sm font-semibold tracking-wide uppercase mb-3"
                    style="color: var(--accent-warm);" { (title) }
@@ -122,7 +126,11 @@ fn privacy_subsection(sub: &PrivacySubsection) -> Markup {
                 p class="t-body whitespace-pre-line" { (content) }
             }
         },
-        PrivacySubsection::TextList { title, content, items } => html! {
+        PrivacySubsection::TextList {
+            title,
+            content,
+            items,
+        } => html! {
             div {
                 h3 class="text-[var(--foreground)] font-semibold mb-2" { (title) }
                 p class="t-body whitespace-pre-line mb-3" { (content) }

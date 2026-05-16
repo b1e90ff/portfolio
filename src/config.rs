@@ -43,7 +43,10 @@ impl Settings {
             .filter(|s| !s.is_empty())
             .collect::<Vec<_>>();
 
-        anyhow::ensure!(!locales.is_empty(), "PORTFOLIO_LOCALES must list at least one");
+        anyhow::ensure!(
+            !locales.is_empty(),
+            "PORTFOLIO_LOCALES must list at least one"
+        );
         anyhow::ensure!(
             locales.contains(&default_locale),
             "default locale {default_locale} not in PORTFOLIO_LOCALES"

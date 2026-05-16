@@ -118,7 +118,9 @@ pub async fn contact(
             tracing::error!(?err, "failed to deliver contact email");
             (
                 StatusCode::BAD_GATEWAY,
-                Json(ApiError { error: "delivery_failed" }),
+                Json(ApiError {
+                    error: "delivery_failed",
+                }),
             )
                 .into_response()
         }

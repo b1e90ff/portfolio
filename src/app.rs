@@ -189,7 +189,12 @@ mod tests {
     #[tokio::test]
     async fn unknown_locale_falls_back() {
         let res = test_app()
-            .oneshot(Request::builder().uri("/xx-XX").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/xx-XX")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(res.status(), StatusCode::PERMANENT_REDIRECT);
@@ -198,7 +203,12 @@ mod tests {
     #[tokio::test]
     async fn security_headers_present() {
         let res = test_app()
-            .oneshot(Request::builder().uri("/healthz").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/healthz")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         let h = res.headers();

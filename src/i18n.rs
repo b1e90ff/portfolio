@@ -427,11 +427,8 @@ mod tests {
 
     #[test]
     fn loads_all_configured_locales() {
-        let i18n = I18n::load(
-            &["en-US".to_string(), "de-DE".to_string()],
-            "en-US",
-        )
-        .expect("translations should load");
+        let i18n = I18n::load(&["en-US".to_string(), "de-DE".to_string()], "en-US")
+            .expect("translations should load");
         assert_eq!(i18n.locales().len(), 2);
         assert!(i18n.has("en-US"));
         assert!(i18n.has("de-DE"));
