@@ -112,6 +112,36 @@ pub async fn project_detail(
     layout(page).into_response()
 }
 
+pub async fn privacy(State(state): State<AppState>, ctx: LocaleCtx) -> Markup {
+    let m = ctx.messages.as_ref();
+    let mut page = Page::new(
+        &state,
+        &ctx.locale,
+        m,
+        "/privacy",
+        m.privacy.title.clone(),
+        m.footer.privacy.clone(),
+        view::legal::privacy_body(&state, &ctx.locale, m),
+    );
+    page.extra_schemas = view::legal::privacy_extra_schemas(&state, &ctx.locale, m);
+    layout(page)
+}
+
+pub async fn impressum(State(state): State<AppState>, ctx: LocaleCtx) -> Markup {
+    let m = ctx.messages.as_ref();
+    let mut page = Page::new(
+        &state,
+        &ctx.locale,
+        m,
+        "/impressum",
+        m.impressum.title.clone(),
+        m.footer.impressum.clone(),
+        view::legal::impressum_body(&state, &ctx.locale, m),
+    );
+    page.extra_schemas = view::legal::impressum_extra_schemas(&state, &ctx.locale, m);
+    layout(page)
+}
+
 pub async fn not_found(State(state): State<AppState>, ctx: LocaleCtx) -> Response {
     let m = ctx.messages.as_ref();
     let body = view::not_found::body(&ctx.locale, m);

@@ -28,6 +28,8 @@ pub fn router(state: AppState) -> Router {
         .route("/{locale}/projects", get(pages::projects_list))
         .route("/{locale}/projects/{id}", get(pages::project_detail))
         .route("/{locale}/contact", get(pages::contact))
+        .route("/{locale}/privacy", get(pages::privacy))
+        .route("/{locale}/impressum", get(pages::impressum))
         .with_state(state);
 
     let images = Router::new()
