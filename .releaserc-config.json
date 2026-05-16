@@ -1,0 +1,8 @@
+[
+  ["@semantic-release/exec", {
+    "prepareCmd": "cargo set-version ${nextRelease.version} && cargo update --workspace --offline"
+  }],
+  ["@semantic-release/git", {
+    "assets": ["Cargo.toml", "Cargo.lock"]
+  }]
+]
