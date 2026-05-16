@@ -19,10 +19,11 @@ const STATIC_PATHS: &[(&str, &str, &str)] = &[
 
 pub async fn sitemap(State(state): State<AppState>) -> Response {
     let base = &state.settings.base_url;
-    let mut xml = String::with_capacity(4096);
-    xml.push_str(r#"<?xml version="1.0" encoding="UTF-8"?>"#);
+    let mut xml = String::with_capacity(8192);
+    xml.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     xml.push_str(
-        r#"<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">"#,
+        "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" \
+          xmlns:xhtml=\"http://www.w3.org/1999/xhtml\">\n",
     );
 
     let locales = state.i18n.locales();
@@ -37,7 +38,7 @@ pub async fn sitemap(State(state): State<AppState>) -> Response {
         }
     }
 
-    xml.push_str("</urlset>");
+    xml.push_str("</urlset>\n");
 
     (
         [
@@ -64,16 +65,16 @@ fn url_entry(
     priority: &str,
     changefreq: &str,
 ) {
-    out.push_str("<url>");
-    out.push_str(&format!("<loc>{base}/{locale}{path}</loc>"));
-    out.push_str(&format!("<changefreq>{changefreq}</changefreq>"));
-    out.push_str(&format!("<priority>{priority}</priority>"));
+    out.push_str("  <url>\n");
+    out.push_str(&format!("    <loc>{base}/{locale}{path}</loc>\n"));
+    out.push_str(&format!("    <changefreq>{changefreq}</changefreq>\n"));
+    out.push_str(&format!("    <priority>{priority}</priority>\n"));
     for alt in locales {
         out.push_str(&format!(
-            r#"<xhtml:link rel="alternate" hreflang="{alt}" href="{base}/{alt}{path}"/>"#
+            "    <xhtml:link rel=\"alternate\" hreflang=\"{alt}\" href=\"{base}/{alt}{path}\"/>\n"
         ));
     }
-    out.push_str("</url>");
+    out.push_str("  </url>\n");
 }
 
 pub async fn robots(State(state): State<AppState>) -> Response {
