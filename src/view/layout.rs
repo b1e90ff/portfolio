@@ -134,11 +134,11 @@ pub fn layout(p: Page<'_>) -> Markup {
                     div class="aurora-grid" {}
                     div class="aurora-vignette" {}
                 }
-                (nav::header(p.locale, p.messages))
-                main #main-content class="relative z-10" {
+                (nav::header(p.state, p.locale, p.path, p.messages))
+                main #main-content class="relative z-10 pt-14" {
                     (p.body)
                 }
-                (nav::footer(p.locale, p.messages))
+                (nav::footer(p.state, p.locale, p.messages))
                 script src="/js/app.js" defer {}
             }
         }
