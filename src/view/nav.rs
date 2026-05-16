@@ -91,7 +91,7 @@ pub fn footer(_state: &AppState, locale: &str, m: &Messages) -> Markup {
                     p class="text-xs text-[var(--text-tertiary)]" {
                         "© " (year) " " (m.footer.copyright)
                     }
-                    span class="hidden sm:inline text-[var(--text-tertiary)]" aria-hidden="true" { "·" }
+                    span class="hidden sm:inline text-[var(--text-tertiary)]" aria-hidden="true" { "|" }
                     p class="text-xs text-[var(--text-tertiary)]" {
                         "v" (env!("CARGO_PKG_VERSION"))
                     }
