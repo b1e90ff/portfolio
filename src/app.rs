@@ -21,6 +21,8 @@ pub fn router(state: AppState) -> Router {
         .route("/", get(root_redirect))
         .route("/{locale}", get(pages::home))
         .route("/{locale}/about", get(pages::about))
+        .route("/{locale}/projects", get(pages::projects_list))
+        .route("/{locale}/projects/{id}", get(pages::project_detail))
         .with_state(state);
 
     let images = Router::new()
