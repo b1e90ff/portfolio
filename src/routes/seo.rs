@@ -1,3 +1,5 @@
+use std::sync::OnceLock;
+
 use axum::Json;
 use axum::extract::State;
 use axum::http::{HeaderValue, StatusCode, header};
@@ -17,24 +19,60 @@ const STATIC_PATHS: &[(&str, &str, &str)] = &[
     ("/impressum", "0.3", "yearly"),
 ];
 
+fn site_lastmod() -> &'static str {
+    static V: OnceLock<String> = OnceLock::new();
+    V.get_or_init(|| chrono::Utc::now().format("%Y-%m-%d").to_string())
+}
+
 pub async fn sitemap(State(state): State<AppState>) -> Response {
     let base = &state.settings.base_url;
     let mut xml = String::with_capacity(8192);
     xml.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     xml.push_str(
         "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" \
-          xmlns:xhtml=\"http://www.w3.org/1999/xhtml\">\n",
+          xmlns:xhtml=\"http://www.w3.org/1999/xhtml\" \
+          xmlns:image=\"http://www.google.com/schemas/sitemap-image/1.1\">\n",
     );
 
     let locales = state.i18n.locales();
+    let default_locale = state.i18n.default_locale();
+    let site_mod = site_lastmod();
+
     for locale in locales {
         let m = state.i18n.get(locale);
         for (path, priority, changefreq) in STATIC_PATHS {
-            url_entry(&mut xml, base, locale, locales, path, priority, changefreq);
+            url_entry(
+                &mut xml,
+                base,
+                locale,
+                locales,
+                default_locale,
+                path,
+                priority,
+                changefreq,
+                site_mod,
+                None,
+            );
         }
         for project in &m.projects.items {
             let path = format!("/projects/{}", project.id);
-            url_entry(&mut xml, base, locale, locales, &path, "0.7", "monthly");
+            let image = if project.image.starts_with("http") {
+                project.image.clone()
+            } else {
+                format!("{base}{}", project.image)
+            };
+            url_entry(
+                &mut xml,
+                base,
+                locale,
+                locales,
+                default_locale,
+                &path,
+                "0.7",
+                "monthly",
+                &project.date,
+                Some(&image),
+            );
         }
     }
 
@@ -56,23 +94,36 @@ pub async fn sitemap(State(state): State<AppState>) -> Response {
         .into_response()
 }
 
+#[allow(clippy::too_many_arguments)]
 fn url_entry(
     out: &mut String,
     base: &str,
     locale: &str,
     locales: &[String],
+    default_locale: &str,
     path: &str,
     priority: &str,
     changefreq: &str,
+    lastmod: &str,
+    image: Option<&str>,
 ) {
     out.push_str("  <url>\n");
     out.push_str(&format!("    <loc>{base}/{locale}{path}</loc>\n"));
+    out.push_str(&format!("    <lastmod>{lastmod}</lastmod>\n"));
     out.push_str(&format!("    <changefreq>{changefreq}</changefreq>\n"));
     out.push_str(&format!("    <priority>{priority}</priority>\n"));
     for alt in locales {
         out.push_str(&format!(
             "    <xhtml:link rel=\"alternate\" hreflang=\"{alt}\" href=\"{base}/{alt}{path}\"/>\n"
         ));
+    }
+    out.push_str(&format!(
+        "    <xhtml:link rel=\"alternate\" hreflang=\"x-default\" href=\"{base}/{default_locale}{path}\"/>\n"
+    ));
+    if let Some(img) = image {
+        out.push_str("    <image:image>\n");
+        out.push_str(&format!("      <image:loc>{img}</image:loc>\n"));
+        out.push_str("    </image:image>\n");
     }
     out.push_str("  </url>\n");
 }
@@ -239,6 +290,10 @@ mod tests {
         }
         assert!(body.contains("/projects/eventfrog"));
         assert!(body.contains(r#"hreflang="de-DE""#));
+        assert!(body.contains(r#"hreflang="x-default""#));
+        assert!(body.contains("<lastmod>"));
+        assert!(body.contains("<image:image>"));
+        assert!(body.contains("xmlns:image="));
     }
 
     #[tokio::test]
