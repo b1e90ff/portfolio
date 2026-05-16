@@ -73,8 +73,14 @@ pub async fn robots(State(state): State<AppState>) -> Response {
         "User-agent: *\n\
          Allow: /\n\
          Disallow: /api/\n\
+         Disallow: /admin/\n\
+         Disallow: /impressum/\n\
+         Disallow: /privacy/\n\
+         Disallow: /favicon.ico\n\
+         Disallow: /site.webmanifest\n\
          \n\
-         Sitemap: {base}/sitemap.xml\n",
+         Sitemap: {base}/sitemap.xml\n\
+         Host: {base}\n",
         base = state.settings.base_url,
     );
 

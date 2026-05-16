@@ -22,6 +22,7 @@ async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
     init_tracing();
 
+    routes::api::boot_instant();
     let settings = config::Settings::from_env()?;
     let i18n = i18n::I18n::load(&settings.locales, &settings.default_locale)
         .context("loading translations")?;

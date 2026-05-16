@@ -1,14 +1,23 @@
 use std::net::IpAddr;
+use std::sync::OnceLock;
+use std::time::Instant;
 
 use axum::Json;
 use axum::extract::{ConnectInfo, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 use validator::Validate;
 
 use crate::state::AppState;
+
+static BOOT_INSTANT: OnceLock<Instant> = OnceLock::new();
+
+pub fn boot_instant() -> Instant {
+    *BOOT_INSTANT.get_or_init(Instant::now)
+}
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct ContactPayload {
@@ -34,8 +43,21 @@ pub struct ApiError {
     pub error: &'static str,
 }
 
-pub async fn health() -> Json<ApiOk> {
-    Json(ApiOk { ok: true })
+#[derive(Debug, Serialize)]
+pub struct HealthResponse {
+    pub status: &'static str,
+    pub timestamp: String,
+    pub uptime: u64,
+    pub version: &'static str,
+}
+
+pub async fn health() -> Json<HealthResponse> {
+    Json(HealthResponse {
+        status: "ok",
+        timestamp: Utc::now().to_rfc3339(),
+        uptime: boot_instant().elapsed().as_secs(),
+        version: env!("CARGO_PKG_VERSION"),
+    })
 }
 
 pub async fn contact(
