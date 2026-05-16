@@ -1,3 +1,9 @@
+// The i18n catalogues mirror the JSON files 1:1, so the struct fields are
+// driven by serde regardless of whether each one is currently bound in a
+// view. We accept the dead-code warning at module scope rather than
+// stripping fields and letting the JSON contract drift from the types.
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -66,6 +72,7 @@ impl I18n {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct Messages {
     pub metadata: Metadata,

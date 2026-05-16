@@ -321,7 +321,7 @@ mod tests {
             .iter()
             .find(|v| v["@type"] == "ItemList")
             .expect("ItemList present");
-        assert!(list["itemListElement"].as_array().unwrap().len() >= 1);
+        assert!(!list["itemListElement"].as_array().unwrap().is_empty());
     }
 
     #[test]

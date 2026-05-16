@@ -69,7 +69,7 @@ pub fn layout(p: Page<'_>) -> Markup {
         schema::organization(p.state, p.locale, p.messages),
         schema::site_navigation(p.state, p.locale, p.messages),
     ];
-    schemas.extend(p.extra_schemas.into_iter());
+    schemas.extend(p.extra_schemas);
 
     html! {
         (DOCTYPE)

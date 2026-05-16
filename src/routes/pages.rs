@@ -142,6 +142,7 @@ pub async fn impressum(State(state): State<AppState>, ctx: LocaleCtx) -> Markup 
     layout(page)
 }
 
+#[allow(dead_code)]
 pub async fn not_found(State(state): State<AppState>, ctx: LocaleCtx) -> Response {
     let m = ctx.messages.as_ref();
     let body = view::not_found::body(&ctx.locale, m);

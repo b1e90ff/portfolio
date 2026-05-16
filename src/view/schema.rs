@@ -17,7 +17,8 @@ pub fn organization(state: &AppState, locale: &str, m: &Messages) -> Value {
         m.social.github.href.as_str(),
         m.social.linkedin.href.as_str(),
     ]
-    .into_iter()
+    .iter()
+    .copied()
     .filter(|s| s.starts_with("http"))
     .collect();
 
@@ -185,7 +186,7 @@ mod tests {
         let m = state.i18n.get("en-US");
         let v = organization(&state, "en-US", &m);
         assert_eq!(v["@type"], "ProfessionalService");
-        assert!(v["sameAs"].as_array().unwrap().len() >= 1);
+        assert!(!v["sameAs"].as_array().unwrap().is_empty());
         assert_eq!(v["url"], "https://example.test/en-US");
     }
 
