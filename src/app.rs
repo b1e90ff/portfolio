@@ -12,16 +12,22 @@ use tower_http::set_header::SetResponseHeaderLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 
+use crate::routes::pages;
 use crate::state::AppState;
 
 pub fn router(state: AppState) -> Router {
     let pages = Router::new()
         .route("/healthz", get(health))
         .route("/", get(root_redirect))
+        .route("/{locale}", get(pages::home))
         .with_state(state);
 
     let images = Router::new()
         .fallback_service(serve_dir("public/images"))
+        .layer(immutable_cache());
+
+    let css = Router::new()
+        .fallback_service(serve_dir("public/css"))
         .layer(immutable_cache());
 
     let public_assets = Router::new()
@@ -30,6 +36,7 @@ pub fn router(state: AppState) -> Router {
 
     pages
         .nest("/images", images)
+        .nest("/css", css)
         .fallback_service(public_assets)
         .layer(SetResponseHeaderLayer::if_not_present(
             http::header::X_FRAME_OPTIONS,

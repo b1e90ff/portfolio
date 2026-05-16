@@ -9,7 +9,11 @@ use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 mod app;
 mod config;
 mod i18n;
+mod keywords;
+mod locale;
+mod routes;
 mod state;
+mod view;
 
 #[tokio::main]
 async fn main() -> Result<()> {
