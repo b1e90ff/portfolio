@@ -66,7 +66,7 @@ pub fn layout(p: Page<'_>) -> Markup {
         .unwrap_or_else(|| format!("{base_url}/{}/opengraph-image", p.locale));
 
     let mut schemas = vec![
-        schema::organization(p.state, p.locale),
+        schema::organization(p.state, p.locale, p.messages),
         schema::site_navigation(p.state, p.locale, p.messages),
     ];
     schemas.extend(p.extra_schemas.into_iter());
@@ -93,7 +93,7 @@ pub fn layout(p: Page<'_>) -> Markup {
 
                 meta property="og:type" content=(p.og_type);
                 meta property="og:url" content=(canonical);
-                meta property="og:site_name" content="Niklas Tat";
+                meta property="og:site_name" content=(p.messages.structured_data.person.name);
                 meta property="og:title" content=(templated_title);
                 meta property="og:description" content=(p.description);
                 meta property="og:locale" content=(og_locale);
@@ -114,9 +114,6 @@ pub fn layout(p: Page<'_>) -> Markup {
                 link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png";
                 link rel="manifest" href="/site.webmanifest";
 
-                link rel="preconnect" href="https://fonts.googleapis.com";
-                link rel="preconnect" href="https://fonts.gstatic.com" crossorigin;
-                link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap";
                 link rel="stylesheet" href="/css/main.css";
 
                 script {
@@ -126,7 +123,7 @@ pub fn layout(p: Page<'_>) -> Markup {
                     (schema::json_ld(s))
                 }
             }
-            body class="min-h-screen" style="font-family: 'Inter', system-ui, -apple-system, sans-serif;" {
+            body class="min-h-screen" {
                 a href="#main-content" class="skip-link" { (p.messages.navigation.skip_to_content) }
                 div class="aurora-bg" aria-hidden="true" {
                     div class="aurora-blob aurora-warm" {}

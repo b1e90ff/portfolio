@@ -188,10 +188,12 @@ fn language_switcher(state: &AppState, current: &str, path: &str) -> Markup {
             @for locale in state.i18n.locales() {
                 @let active = locale == current;
                 @let href = format!("/{locale}{path}");
-                @let label = locale_label(locale);
+                @let target = state.i18n.get(locale);
+                @let label = target.navigation.language_short.clone();
                 a href=(href)
+                  hreflang=(locale)
                   aria-pressed=(active.to_string())
-                  aria-label=(format!("Switch language to {label}"))
+                  aria-label=(target.navigation.toggle_theme)
                   class={
                       "min-w-11 h-11 inline-flex items-center justify-center px-3 text-xs font-medium transition-colors "
                       @if active { "bg-[var(--accent-warm)] text-[#09090b]" }
@@ -201,14 +203,6 @@ fn language_switcher(state: &AppState, current: &str, path: &str) -> Markup {
                 }
             }
         }
-    }
-}
-
-fn locale_label(locale: &str) -> &'static str {
-    match locale {
-        "de-DE" => "DE",
-        "en-US" => "EN",
-        _ => "EN",
     }
 }
 

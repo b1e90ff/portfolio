@@ -10,30 +10,29 @@ pub fn json_ld(value: &Value) -> Markup {
     html! { script type="application/ld+json" { (PreEscaped(json)) } }
 }
 
-pub fn organization(state: &AppState, locale: &str) -> Value {
+pub fn organization(state: &AppState, locale: &str, m: &Messages) -> Value {
     let base = &state.settings.base_url;
+    let image = absolute(base, &m.structured_data.person.image);
+    let same_as: Vec<&str> = [
+        m.social.github.href.as_str(),
+        m.social.linkedin.href.as_str(),
+    ]
+    .into_iter()
+    .filter(|s| s.starts_with("http"))
+    .collect();
+
     json!({
         "@context": "https://schema.org",
         "@type": "ProfessionalService",
         "@id": format!("{base}#organization"),
-        "name": "Niklas Tat",
+        "name": m.structured_data.person.name,
         "url": format!("{base}/{locale}"),
-        "image": format!("{base}/tat.webp"),
-        "logo": format!("{base}/tat.webp"),
-        "sameAs": [
-            "https://github.com/b1e90ff",
-            "https://linkedin.com/in/niklas-tat-5219a024b",
-        ],
-        "founder": { "@type": "Person", "name": "Niklas Tat" },
-        "areaServed": { "@type": "Country", "name": "Switzerland" },
-        "knowsAbout": [
-            "Backend Development",
-            "DevOps",
-            "IT Management",
-            "Kubernetes",
-            "Cloud Infrastructure",
-            "Security & Compliance",
-        ],
+        "image": image,
+        "logo": image,
+        "sameAs": same_as,
+        "founder": { "@type": "Person", "name": m.structured_data.person.name },
+        "areaServed": { "@type": "Country", "name": area_served_name(locale) },
+        "knowsAbout": m.structured_data.portfolio.about,
     })
 }
 
@@ -103,11 +102,7 @@ pub fn web_page(
 pub fn person(state: &AppState, m: &Messages, skills_flat: &[String]) -> Value {
     let base = &state.settings.base_url;
     let p = &m.structured_data.person;
-    let image = if p.image.starts_with("http") {
-        p.image.clone()
-    } else {
-        format!("{base}{}", p.image)
-    };
+    let image = absolute(base, &p.image);
     json!({
         "@context": "https://schema.org",
         "@type": "Person",
@@ -135,7 +130,7 @@ pub fn website(state: &AppState, m: &Messages) -> Value {
     })
 }
 
-pub fn portfolio(state: &AppState, m: &Messages) -> Value {
+pub fn portfolio(state: &AppState, locale: &str, m: &Messages) -> Value {
     let base = &state.settings.base_url;
     let p = &m.structured_data.portfolio;
     json!({
@@ -147,6 +142,74 @@ pub fn portfolio(state: &AppState, m: &Messages) -> Value {
         "genre": p.genre,
         "about": p.about,
         "author": { "@type": "Person", "name": m.structured_data.person.name },
-        "url": format!("{base}/projects"),
+        "url": format!("{base}/{locale}/projects"),
     })
+}
+
+fn absolute(base: &str, url: &str) -> String {
+    if url.starts_with("http") {
+        url.to_string()
+    } else {
+        format!("{base}{url}")
+    }
+}
+
+fn area_served_name(locale: &str) -> &'static str {
+    match locale {
+        "de-DE" => "Schweiz",
+        _ => "Switzerland",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use super::*;
+    use crate::config::Settings;
+    use crate::i18n::I18n;
+
+    fn fixture_state() -> AppState {
+        let settings = Settings {
+            bind: "0.0.0.0:3000".into(),
+            base_url: "https://example.test".into(),
+            default_locale: "en-US".into(),
+            locales: vec!["en-US".into(), "de-DE".into()],
+        };
+        let i18n = I18n::load(&settings.locales, &settings.default_locale).unwrap();
+        AppState {
+            settings: Arc::new(settings),
+            i18n: Arc::new(i18n),
+        }
+    }
+
+    #[test]
+    fn organization_contains_name_and_sameAs() {
+        let state = fixture_state();
+        let m = state.i18n.get("en-US");
+        let v = organization(&state, "en-US", &m);
+        assert_eq!(v["@type"], "ProfessionalService");
+        assert!(v["sameAs"].as_array().unwrap().len() >= 1);
+        assert_eq!(v["url"], "https://example.test/en-US");
+    }
+
+    #[test]
+    fn breadcrumb_uses_one_based_positions() {
+        let state = fixture_state();
+        let v = breadcrumb(&state, "en-US", &[("Home", ""), ("Projects", "/projects")]);
+        let list = v["itemListElement"].as_array().unwrap();
+        assert_eq!(list[0]["position"], 1);
+        assert_eq!(list[1]["position"], 2);
+        assert_eq!(list[1]["item"], "https://example.test/en-US/projects");
+    }
+
+    #[test]
+    fn web_page_carries_inlanguage() {
+        let state = fixture_state();
+        let v = web_page(
+            &state, "de-DE", "/about", "About", "About description", "AboutPage", "Niklas Tat",
+        );
+        assert_eq!(v["inLanguage"], "de-DE");
+        assert_eq!(v["@type"], "AboutPage");
+    }
 }

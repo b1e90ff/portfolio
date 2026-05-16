@@ -45,3 +45,78 @@ impl Settings {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Mutex;
+
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
+
+    fn with_clean_env<F: FnOnce()>(f: F) {
+        let _guard = ENV_LOCK.lock().unwrap_or_else(|p| p.into_inner());
+        // SAFETY: tests are serialised via ENV_LOCK so the unsoundness of
+        // env::remove_var across threads cannot trigger here.
+        unsafe {
+            for k in [
+                "PORTFOLIO_BIND",
+                "PORTFOLIO_BASE_URL",
+                "NEXT_PUBLIC_BASE_URL",
+                "BASE_URL",
+                "PORTFOLIO_DEFAULT_LOCALE",
+                "PORTFOLIO_LOCALES",
+            ] {
+                std::env::remove_var(k);
+            }
+        }
+        f();
+    }
+
+    #[test]
+    fn defaults_are_sensible() {
+        with_clean_env(|| {
+            let s = Settings::from_env().expect("should build defaults");
+            assert_eq!(s.bind, "0.0.0.0:3000");
+            assert_eq!(s.base_url, "http://localhost:3000");
+            assert_eq!(s.default_locale, "en-US");
+            assert!(s.locales.iter().any(|l| l == "en-US"));
+        });
+    }
+
+    #[test]
+    fn base_url_trailing_slash_is_trimmed() {
+        with_clean_env(|| {
+            // SAFETY: serialised via ENV_LOCK.
+            unsafe {
+                std::env::set_var("PORTFOLIO_BASE_URL", "https://example.com/");
+            }
+            let s = Settings::from_env().unwrap();
+            assert_eq!(s.base_url, "https://example.com");
+        });
+    }
+
+    #[test]
+    fn default_locale_must_be_in_locales() {
+        with_clean_env(|| {
+            // SAFETY: serialised via ENV_LOCK.
+            unsafe {
+                std::env::set_var("PORTFOLIO_DEFAULT_LOCALE", "fr-FR");
+                std::env::set_var("PORTFOLIO_LOCALES", "en-US,de-DE");
+            }
+            assert!(Settings::from_env().is_err());
+        });
+    }
+
+    #[test]
+    fn locales_list_is_split_on_commas() {
+        with_clean_env(|| {
+            // SAFETY: serialised via ENV_LOCK.
+            unsafe {
+                std::env::set_var("PORTFOLIO_LOCALES", "en-US, de-DE , fr-FR");
+                std::env::set_var("PORTFOLIO_DEFAULT_LOCALE", "en-US");
+            }
+            let s = Settings::from_env().unwrap();
+            assert_eq!(s.locales, vec!["en-US", "de-DE", "fr-FR"]);
+        });
+    }
+}

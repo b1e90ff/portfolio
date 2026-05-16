@@ -116,6 +116,8 @@ pub struct Navigation {
     pub skip_to_content: String,
     #[serde(rename = "toggleTheme")]
     pub toggle_theme: String,
+    #[serde(rename = "languageShort")]
+    pub language_short: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -136,6 +138,8 @@ pub struct Hero {
     pub currently_at: String,
     #[serde(rename = "openSource")]
     pub open_source: String,
+    #[serde(rename = "currentEmployerUrl")]
+    pub current_employer_url: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -408,4 +412,52 @@ pub struct NotFound {
     pub title: String,
     pub message: String,
     pub back: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn loads_all_configured_locales() {
+        let i18n = I18n::load(
+            &["en-US".to_string(), "de-DE".to_string()],
+            "en-US",
+        )
+        .expect("translations should load");
+        assert_eq!(i18n.locales().len(), 2);
+        assert!(i18n.has("en-US"));
+        assert!(i18n.has("de-DE"));
+    }
+
+    #[test]
+    fn unknown_locale_falls_back_to_default() {
+        let i18n = I18n::load(&["en-US".to_string()], "en-US").unwrap();
+        let m = i18n.get("xx-XX");
+        assert!(!m.navigation.home.is_empty());
+    }
+
+    #[test]
+    fn og_locale_uses_underscore() {
+        assert_eq!(I18n::og_locale("en-US"), "en_US");
+        assert_eq!(I18n::og_locale("de-DE"), "de_DE");
+    }
+
+    #[test]
+    fn missing_default_locale_is_rejected() {
+        let result = I18n::load(&["en-US".to_string()], "fr-FR");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn en_us_catalogue_has_all_pages() {
+        let i18n = I18n::load(&["en-US".to_string()], "en-US").unwrap();
+        let m = i18n.get("en-US");
+        assert!(!m.hero.title.is_empty());
+        assert!(!m.about.bio.content.is_empty());
+        assert!(!m.projects.items.is_empty());
+        assert!(!m.contact.form.send.is_empty());
+        assert!(!m.privacy.sections.is_empty());
+        assert!(!m.impressum.sections.is_empty());
+    }
 }

@@ -17,7 +17,8 @@
     "openMenu": "Menü öffnen",
     "closeMenu": "Menü schließen",
     "skipToContent": "Zum Hauptinhalt springen",
-    "toggleTheme": "Theme wechseln"
+    "toggleTheme": "Theme wechseln",
+    "languageShort": "DE"
   },
   "hero": {
     "title": "Hi, ich bin Niklas.",
@@ -28,7 +29,8 @@
     "ctaProjects": "Meine Projekte",
     "ctaContact": "Kontakt",
     "currentlyAt": "Aktuell bei",
-    "openSource": "Open Source auf"
+    "openSource": "Open Source auf",
+    "currentEmployerUrl": "https://eventfrog.net"
   },
   "about": {
     "aboutTitle": "Über mich",
