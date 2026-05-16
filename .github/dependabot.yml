@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      tokio:
+        patterns: ["tokio*"]
+      tracing:
+        patterns: ["tracing*"]
+      tower:
+        patterns: ["tower*", "tower-http*"]
+      axum:
+        patterns: ["axum*", "hyper*", "http*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
