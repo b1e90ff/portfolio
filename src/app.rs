@@ -55,7 +55,10 @@ pub fn router(state: AppState) -> Router {
             HeaderValue::from_static("camera=(), microphone=(), geolocation=()"),
         ))
         .layer(CompressionLayer::new().gzip(true).br(true))
-        .layer(TimeoutLayer::new(Duration::from_secs(15)))
+        .layer(TimeoutLayer::with_status_code(
+            http::StatusCode::GATEWAY_TIMEOUT,
+            Duration::from_secs(15),
+        ))
         .layer(CatchPanicLayer::new())
         .layer(PropagateRequestIdLayer::x_request_id())
         .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
