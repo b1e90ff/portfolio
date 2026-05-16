@@ -12,12 +12,13 @@ use tower_http::set_header::SetResponseHeaderLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 
-use crate::config::Settings;
+use crate::state::AppState;
 
-pub fn router(settings: Settings) -> Router {
+pub fn router(state: AppState) -> Router {
     let pages = Router::new()
         .route("/healthz", get(health))
-        .route("/", get(root_redirect));
+        .route("/", get(root_redirect))
+        .with_state(state);
 
     let images = Router::new()
         .fallback_service(serve_dir("public/images"))
@@ -52,7 +53,6 @@ pub fn router(settings: Settings) -> Router {
         .layer(PropagateRequestIdLayer::x_request_id())
         .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
         .layer(TraceLayer::new_for_http())
-        .with_state(settings)
 }
 
 fn serve_dir(path: &str) -> ServeDir {
@@ -81,7 +81,7 @@ async fn health() -> &'static str {
 }
 
 async fn root_redirect(
-    axum::extract::State(settings): axum::extract::State<Settings>,
+    axum::extract::State(state): axum::extract::State<AppState>,
 ) -> axum::response::Redirect {
-    axum::response::Redirect::permanent(&format!("/{}", settings.default_locale))
+    axum::response::Redirect::permanent(&format!("/{}", state.settings.default_locale))
 }
