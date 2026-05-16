@@ -139,7 +139,7 @@ fn experience(m: &Messages) -> Markup {
                 ol class="relative border-l border-[var(--border-subtle)] pl-8 sm:pl-10 space-y-12" {
                     @for item in &m.experience.items {
                         li class="relative" {
-                            span class="absolute -left-[33px] top-2 w-3 h-3 rounded-full"
+                            span class="absolute -left-[38px] sm:-left-[46px] top-2 w-3 h-3 rounded-full"
                                  style="background-color: var(--accent-warm); box-shadow: 0 0 0 4px var(--background);" {}
                             div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 mb-2" {
                                 h3 class="text-[var(--foreground)] font-semibold" { (item.title) }

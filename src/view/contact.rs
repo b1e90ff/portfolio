@@ -76,7 +76,9 @@ fn channel_toggle(label: &str) -> Markup {
     }
 }
 
-fn icon_form() -> Markup { html! { (PreEscaped(r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10"/><path d="M7 13h7"/><path d="M7 17h4"/></svg>"#)) } }
+fn icon_form() -> Markup {
+    html! { (PreEscaped(r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10"/><path d="M7 13h7"/><path d="M7 17h4"/></svg>"#)) }
+}
 
 fn channel_link(label: &str, href: &str, icon: Markup, external: bool) -> Markup {
     html! {

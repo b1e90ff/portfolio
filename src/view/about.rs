@@ -21,9 +21,9 @@ pub fn body(_state: &AppState, _locale: &str, m: &Messages) -> Markup {
                         }
                     }
                     div class="text-center sm:text-left flex-1 min-w-0" {
-                        p class="t-caption mb-3" { (m.structured_data.person.job_title) }
+                        p class="t-caption mb-3" { (m.about.about_title) }
                         h1 class="t-h1 mb-4" {
-                            span class="text-aurora" { (m.about.about_title) }
+                            span class="text-aurora" { (m.structured_data.person.name) }
                         }
                     }
                 }
