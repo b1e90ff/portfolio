@@ -1,0 +1,204 @@
+use axum::Json;
+use axum::extract::State;
+use axum::http::{HeaderValue, header};
+use axum::response::{IntoResponse, Response};
+use serde_json::json;
+
+use crate::state::AppState;
+
+const STATIC_PATHS: &[(&str, &str, &str)] = &[
+    ("", "1.0", "weekly"),
+    ("/about", "0.8", "monthly"),
+    ("/projects", "0.9", "weekly"),
+    ("/contact", "0.8", "monthly"),
+    ("/privacy", "0.3", "yearly"),
+    ("/impressum", "0.3", "yearly"),
+];
+
+pub async fn sitemap(State(state): State<AppState>) -> Response {
+    let base = &state.settings.base_url;
+    let mut xml = String::with_capacity(4096);
+    xml.push_str(r#"<?xml version="1.0" encoding="UTF-8"?>"#);
+    xml.push_str(
+        r#"<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">"#,
+    );
+
+    let locales = state.i18n.locales();
+    for locale in locales {
+        let m = state.i18n.get(locale);
+        for (path, priority, changefreq) in STATIC_PATHS {
+            url_entry(&mut xml, base, locale, locales, path, priority, changefreq);
+        }
+        for project in &m.projects.items {
+            let path = format!("/projects/{}", project.id);
+            url_entry(&mut xml, base, locale, locales, &path, "0.7", "monthly");
+        }
+    }
+
+    xml.push_str("</urlset>");
+
+    (
+        [
+            (header::CONTENT_TYPE, HeaderValue::from_static("application/xml; charset=utf-8")),
+            (header::CACHE_CONTROL, HeaderValue::from_static("public, s-maxage=86400, stale-while-revalidate=604800")),
+        ],
+        xml,
+    )
+        .into_response()
+}
+
+fn url_entry(
+    out: &mut String,
+    base: &str,
+    locale: &str,
+    locales: &[String],
+    path: &str,
+    priority: &str,
+    changefreq: &str,
+) {
+    out.push_str("<url>");
+    out.push_str(&format!("<loc>{base}/{locale}{path}</loc>"));
+    out.push_str(&format!("<changefreq>{changefreq}</changefreq>"));
+    out.push_str(&format!("<priority>{priority}</priority>"));
+    for alt in locales {
+        out.push_str(&format!(
+            r#"<xhtml:link rel="alternate" hreflang="{alt}" href="{base}/{alt}{path}"/>"#
+        ));
+    }
+    out.push_str("</url>");
+}
+
+pub async fn robots(State(state): State<AppState>) -> Response {
+    let body = format!(
+        "User-agent: *\n\
+         Allow: /\n\
+         Disallow: /api/\n\
+         \n\
+         Sitemap: {base}/sitemap.xml\n",
+        base = state.settings.base_url,
+    );
+
+    (
+        [
+            (header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8")),
+            (header::CACHE_CONTROL, HeaderValue::from_static("public, s-maxage=86400, stale-while-revalidate=604800")),
+        ],
+        body,
+    )
+        .into_response()
+}
+
+pub async fn manifest(State(state): State<AppState>) -> Response {
+    let m = state.i18n.get(&state.settings.default_locale);
+    let manifest = json!({
+        "name": m.metadata.manifest.name,
+        "short_name": m.metadata.manifest.short_name,
+        "description": m.metadata.manifest.description,
+        "start_url": format!("/{}", state.settings.default_locale),
+        "scope": "/",
+        "display": "standalone",
+        "orientation": "portrait",
+        "background_color": "#060608",
+        "theme_color": "#060608",
+        "icons": [
+            {
+                "src": "/android-chrome-192x192.png",
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any maskable"
+            },
+            {
+                "src": "/android-chrome-512x512.png",
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any maskable"
+            },
+            {
+                "src": "/apple-touch-icon.png",
+                "sizes": "180x180",
+                "type": "image/png"
+            }
+        ]
+    });
+
+    (
+        [(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("application/manifest+json"),
+        )],
+        Json(manifest),
+    )
+        .into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::config::Settings;
+    use crate::i18n::I18n;
+    use crate::state::AppState;
+    use crate::app::router;
+    use axum::body::Body;
+    use axum::http::{Request, StatusCode};
+    use http_body_util::BodyExt;
+    use tower::ServiceExt;
+
+    fn app() -> axum::Router {
+        let settings = Settings {
+            bind: "0.0.0.0:0".into(),
+            base_url: "https://example.test".into(),
+            default_locale: "en-US".into(),
+            locales: vec!["en-US".into(), "de-DE".into()],
+            smtp: None,
+        };
+        let i18n = I18n::load(&settings.locales, &settings.default_locale).unwrap();
+        router(AppState::new(settings, i18n))
+    }
+
+    async fn body_of(app: axum::Router, path: &str) -> (StatusCode, String, axum::http::HeaderMap) {
+        let res = app
+            .oneshot(Request::builder().uri(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        let status = res.status();
+        let headers = res.headers().clone();
+        let bytes = res.into_body().collect().await.unwrap().to_bytes();
+        (status, String::from_utf8(bytes.to_vec()).unwrap_or_default(), headers)
+    }
+
+    #[tokio::test]
+    async fn sitemap_lists_every_locale_and_every_static_path() {
+        let (status, body, h) = body_of(app(), "/sitemap.xml").await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(
+            h.get("content-type").unwrap().to_str().unwrap().contains("application/xml"),
+            "content-type was {:?}", h.get("content-type")
+        );
+        for locale in ["en-US", "de-DE"] {
+            for path in ["", "/about", "/projects", "/contact", "/privacy", "/impressum"] {
+                let expected = format!("<loc>https://example.test/{locale}{path}</loc>");
+                assert!(body.contains(&expected), "missing {expected}");
+            }
+        }
+        assert!(body.contains("/projects/eventfrog"));
+        assert!(body.contains(r#"hreflang="de-DE""#));
+    }
+
+    #[tokio::test]
+    async fn robots_points_at_sitemap_and_blocks_api() {
+        let (status, body, _) = body_of(app(), "/robots.txt").await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(body.contains("Disallow: /api/"));
+        assert!(body.contains("Sitemap: https://example.test/sitemap.xml"));
+    }
+
+    #[tokio::test]
+    async fn manifest_returns_pwa_metadata() {
+        let (status, body, h) = body_of(app(), "/site.webmanifest").await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(
+            h.get("content-type").unwrap().to_str().unwrap().starts_with("application/manifest+json"),
+        );
+        assert!(body.contains(r#""name":"tat.systems""#));
+        assert!(body.contains("android-chrome-512x512.png"));
+    }
+}

@@ -14,7 +14,7 @@ use tower_http::trace::TraceLayer;
 
 use axum::routing::post;
 
-use crate::routes::{api, pages};
+use crate::routes::{api, pages, seo};
 use crate::state::AppState;
 
 pub fn router(state: AppState) -> Router {
@@ -23,6 +23,9 @@ pub fn router(state: AppState) -> Router {
         .route("/", get(root_redirect))
         .route("/api/health", get(api::health))
         .route("/api/contact", post(api::contact))
+        .route("/sitemap.xml", get(seo::sitemap))
+        .route("/robots.txt", get(seo::robots))
+        .route("/site.webmanifest", get(seo::manifest))
         .route("/{locale}", get(pages::home))
         .route("/{locale}/about", get(pages::about))
         .route("/{locale}/projects", get(pages::projects_list))
