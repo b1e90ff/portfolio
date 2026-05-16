@@ -1,0 +1,52 @@
+# Rust
+/target
+**/*.rs.bk
+Cargo.lock.bak
+
+# Node / Tailwind toolchain
+/node_modules
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build output
+/static/css/build.css
+/static/js/*.bundle.js
+/dist
+/build
+
+# Logs & runtime
+*.log
+*.pid
+*.seed
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+.Spotlight-V100
+.Trashes
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Backups & tmp
+*.bak
+*.backup
+*.tmp
+*.temp
+
+# Ruflo / swarm runtime artifacts — never commit
+/.ruflo/
+/.swarm/
+/.hive-mind/
+/.claude-flow/
+claude-flow.config.json
+ruflo.config.json
+/memory/
+/coordination/
