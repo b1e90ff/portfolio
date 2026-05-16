@@ -38,6 +38,21 @@ pub async fn about(State(state): State<AppState>, ctx: LocaleCtx) -> Markup {
     layout(page)
 }
 
+pub async fn contact(State(state): State<AppState>, ctx: LocaleCtx) -> Markup {
+    let m = ctx.messages.as_ref();
+    let mut page = Page::new(
+        &state,
+        &ctx.locale,
+        m,
+        "/contact",
+        m.contact.title.clone(),
+        m.contact.description.clone(),
+        view::contact::body(&state, &ctx.locale, m),
+    );
+    page.extra_schemas = view::contact::extra_schemas(&state, &ctx.locale, m);
+    layout(page)
+}
+
 pub async fn projects_list(State(state): State<AppState>, ctx: LocaleCtx) -> Markup {
     let m = ctx.messages.as_ref();
     let mut page = Page::new(

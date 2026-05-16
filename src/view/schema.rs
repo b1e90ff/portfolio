@@ -163,8 +163,6 @@ fn area_served_name(locale: &str) -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
     use super::*;
     use crate::config::Settings;
     use crate::i18n::I18n;
@@ -175,12 +173,10 @@ mod tests {
             base_url: "https://example.test".into(),
             default_locale: "en-US".into(),
             locales: vec!["en-US".into(), "de-DE".into()],
+            smtp: None,
         };
         let i18n = I18n::load(&settings.locales, &settings.default_locale).unwrap();
-        AppState {
-            settings: Arc::new(settings),
-            i18n: Arc::new(i18n),
-        }
+        AppState::new(settings, i18n)
     }
 
     #[test]

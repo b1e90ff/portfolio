@@ -291,7 +291,6 @@ mod tests {
     use super::*;
     use crate::config::Settings;
     use crate::i18n::I18n;
-    use std::sync::Arc;
 
     fn fixture_state() -> AppState {
         let settings = Settings {
@@ -299,12 +298,10 @@ mod tests {
             base_url: "https://example.test".into(),
             default_locale: "en-US".into(),
             locales: vec!["en-US".into(), "de-DE".into()],
+            smtp: None,
         };
         let i18n = I18n::load(&settings.locales, &settings.default_locale).unwrap();
-        AppState {
-            settings: Arc::new(settings),
-            i18n: Arc::new(i18n),
-        }
+        AppState::new(settings, i18n)
     }
 
     #[test]

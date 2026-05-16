@@ -8,6 +8,18 @@ pub struct Settings {
     pub base_url: String,
     pub default_locale: String,
     pub locales: Vec<String>,
+    pub smtp: Option<SmtpSettings>,
+}
+
+#[derive(Debug, Clone)]
+pub struct SmtpSettings {
+    pub host: String,
+    pub port: u16,
+    pub username: String,
+    pub password: String,
+    pub from: String,
+    pub to: String,
+    pub starttls: bool,
 }
 
 impl Settings {
@@ -37,11 +49,44 @@ impl Settings {
             "default locale {default_locale} not in PORTFOLIO_LOCALES"
         );
 
+        let smtp = SmtpSettings::from_env_opt();
+
         Ok(Self {
             bind,
             base_url,
             default_locale,
             locales,
+            smtp,
+        })
+    }
+}
+
+impl SmtpSettings {
+    fn from_env_opt() -> Option<Self> {
+        let host = env::var("SMTP_HOST").ok()?;
+        if host.trim().is_empty() {
+            return None;
+        }
+        let username = env::var("SMTP_USERNAME").ok()?;
+        let password = env::var("SMTP_PASSWORD").ok()?;
+        let from = env::var("SMTP_FROM").unwrap_or_else(|_| username.clone());
+        let to = env::var("SMTP_TO").unwrap_or_else(|_| username.clone());
+        let port: u16 = env::var("SMTP_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(587);
+        let starttls = env::var("SMTP_USE_STARTTLS")
+            .map(|v| v.eq_ignore_ascii_case("true"))
+            .unwrap_or(true);
+
+        Some(Self {
+            host,
+            port,
+            username,
+            password,
+            from,
+            to,
+            starttls,
         })
     }
 }

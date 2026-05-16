@@ -8,9 +8,11 @@ use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
 mod app;
 mod config;
+mod email;
 mod i18n;
 mod keywords;
 mod locale;
+mod rate_limit;
 mod routes;
 mod state;
 mod view;
@@ -34,10 +36,13 @@ async fn main() -> Result<()> {
         .with_context(|| format!("failed to bind {addr}"))?;
 
     info!(%addr, base_url = %settings.base_url, "portfolio listening");
-    axum::serve(listener, router)
-        .with_graceful_shutdown(shutdown_signal())
-        .await
-        .context("axum server error")?;
+    axum::serve(
+        listener,
+        router.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await
+    .context("axum server error")?;
 
     info!("shutdown complete");
     Ok(())

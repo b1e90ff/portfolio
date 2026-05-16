@@ -12,17 +12,22 @@ use tower_http::set_header::SetResponseHeaderLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 
-use crate::routes::pages;
+use axum::routing::post;
+
+use crate::routes::{api, pages};
 use crate::state::AppState;
 
 pub fn router(state: AppState) -> Router {
     let pages = Router::new()
         .route("/healthz", get(health))
         .route("/", get(root_redirect))
+        .route("/api/health", get(api::health))
+        .route("/api/contact", post(api::contact))
         .route("/{locale}", get(pages::home))
         .route("/{locale}/about", get(pages::about))
         .route("/{locale}/projects", get(pages::projects_list))
         .route("/{locale}/projects/{id}", get(pages::project_detail))
+        .route("/{locale}/contact", get(pages::contact))
         .with_state(state);
 
     let images = Router::new()
@@ -115,6 +120,7 @@ mod tests {
             base_url: "https://example.test".into(),
             default_locale: "en-US".into(),
             locales: vec!["en-US".into(), "de-DE".into()],
+            smtp: None,
         };
         let i18n = I18n::load(&settings.locales, &settings.default_locale).unwrap();
         let state = AppState::new(settings, i18n);
