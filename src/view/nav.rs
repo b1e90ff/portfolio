@@ -2,6 +2,7 @@ use maud::{Markup, PreEscaped, html};
 
 use crate::i18n::Messages;
 use crate::state::AppState;
+use crate::view::layout::asset;
 
 pub fn header(state: &AppState, locale: &str, path: &str, m: &Messages) -> Markup {
     let nav = [
@@ -18,7 +19,7 @@ pub fn header(state: &AppState, locale: &str, path: &str, m: &Messages) -> Marku
                 div class="flex justify-between items-center h-14" {
                     a href=(format!("/{locale}")) class="inline-flex items-center -ml-1 p-1.5 rounded-md"
                       aria-label="Niklas Tat" {
-                        img src="/tat.webp" alt="Niklas Tat" width="28" height="28" loading="eager" decoding="async";
+                        img src=(asset("/tat.webp")) alt="Niklas Tat" width="28" height="28" loading="eager" decoding="async";
                     }
 
                     div class="hidden sm:flex items-center gap-1 ml-6" {

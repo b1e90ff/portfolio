@@ -3,6 +3,7 @@ use serde_json::Value;
 
 use crate::i18n::Messages;
 use crate::state::AppState;
+use crate::view::layout::asset;
 use crate::view::schema;
 
 pub fn body(_state: &AppState, _locale: &str, m: &Messages) -> Markup {
@@ -12,7 +13,7 @@ pub fn body(_state: &AppState, _locale: &str, m: &Messages) -> Markup {
                 div class="flex flex-col sm:flex-row items-center sm:items-start gap-8 mb-16" {
                     div class="shrink-0" {
                         div class="relative w-24 h-24 aspect-square" {
-                            img src=(m.about.avatar.image)
+                            img src=(asset(&m.about.avatar.image))
                                 alt=(m.about.avatar.alt)
                                 width="96" height="96"
                                 loading="eager" decoding="async"

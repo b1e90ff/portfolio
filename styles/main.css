@@ -102,23 +102,7 @@
     font-weight: 400;
     font-display: swap;
     src: local('Inter'), local('Inter-Regular'),
-         url('/fonts/inter-latin-400.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Inter';
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: local('Inter Medium'), local('Inter-Medium'),
-         url('/fonts/inter-latin-500.woff2') format('woff2');
-}
-@font-face {
-    font-family: 'Inter';
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: local('Inter SemiBold'), local('Inter-SemiBold'),
-         url('/fonts/inter-latin-600.woff2') format('woff2');
+         url('/fonts/Inter-Regular.ttf') format('truetype');
 }
 @font-face {
     font-family: 'Inter';
@@ -126,7 +110,7 @@
     font-weight: 700;
     font-display: swap;
     src: local('Inter Bold'), local('Inter-Bold'),
-         url('/fonts/inter-latin-700.woff2') format('woff2');
+         url('/fonts/Inter-Bold.ttf') format('truetype');
 }
 
 html, body {
@@ -386,12 +370,15 @@ section { background: transparent; }
 }
 .fade-in { animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 
-[data-fade] {
+/* Content is visible by default — works without JS. The IntersectionObserver
+   in /js/app.js adds [data-fade-init] before the element enters the viewport
+   to play the fade animation only when it pops into view. */
+[data-fade][data-fade-init] {
     opacity: 0;
     transform: translateY(16px);
     transition: opacity 0.6s ease, transform 0.6s ease;
 }
-[data-fade].is-visible {
+[data-fade][data-fade-init].is-visible {
     opacity: 1;
     transform: translateY(0);
 }
@@ -401,7 +388,7 @@ section { background: transparent; }
     .ring-soft,
     .aurora-warm,
     .aurora-cool,
-    [data-fade],
+    [data-fade][data-fade-init],
     *[class*="animate-"] {
         animation: none !important;
         transition: none !important;

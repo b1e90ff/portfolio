@@ -5,6 +5,7 @@ use serde_json::{Value, json};
 
 use crate::i18n::{Messages, ProjectItem};
 use crate::state::AppState;
+use crate::view::layout::asset;
 use crate::view::schema;
 
 pub fn list_body(_state: &AppState, locale: &str, m: &Messages) -> Markup {
@@ -23,15 +24,16 @@ pub fn list_body(_state: &AppState, locale: &str, m: &Messages) -> Markup {
 
     html! {
         section class="container mx-auto px-4 pt-32 sm:pt-40 pb-16" {
-            div class="max-w-6xl mx-auto" {
-                header class="mb-12" {
+            div class="max-w-3xl mx-auto" {
+                header class="mb-10" {
+                    p class="t-caption mb-3" { (m.projects.title) }
                     h1 class="t-h1 mb-4" {
                         span class="text-aurora" { (m.projects.title) }
                     }
-                    p class="t-lead max-w-2xl" { (m.projects.description) }
+                    p class="t-lead" { (m.projects.description) }
                 }
 
-                div class="flex flex-col sm:flex-row flex-wrap gap-3 mb-4"
+                div class="flex flex-col sm:flex-row flex-wrap gap-3 mb-6"
                     data-projects-filters {
                     input type="search"
                           name="q"
@@ -63,8 +65,7 @@ pub fn list_body(_state: &AppState, locale: &str, m: &Messages) -> Markup {
                            data-projects-reset { (m.projects.reset_filters) }
                 }
 
-                div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
-                    data-projects-grid {
+                div class="space-y-4" data-projects-grid {
                     @for project in &m.projects.items {
                         (project_card(locale, m, project))
                     }
@@ -102,7 +103,7 @@ pub fn detail_body(_state: &AppState, locale: &str, m: &Messages, project: &Proj
                 p class="t-lead mb-10" { (project.description) }
 
                 figure class="aspect-video relative mb-12 rounded-xl overflow-hidden border border-[var(--border-subtle)]" {
-                    img src=(project.image)
+                    img src=(asset(&project.image))
                         alt=(project.title)
                         width="1280" height="720"
                         loading="eager" decoding="async"
@@ -237,34 +238,60 @@ pub fn detail_extra_schemas(
     ]
 }
 
-fn project_card(locale: &str, _m: &Messages, p: &ProjectItem) -> Markup {
+fn project_card(locale: &str, m: &Messages, p: &ProjectItem) -> Markup {
     let tech_data = p.technologies.join(",");
     html! {
-        article class="card card-interactive lift-on-hover overflow-hidden flex flex-col"
+        article class="card card-interactive lift-on-hover overflow-hidden"
                 data-project-card
                 data-status=(p.status)
                 data-technologies=(tech_data)
                 data-title=(p.title.to_lowercase())
                 data-description=(p.description.to_lowercase()) {
-            a href=(format!("/{locale}/projects/{}", p.id))
-              class="flex flex-col h-full" {
-                figure class="aspect-video overflow-hidden border-b border-[var(--border-subtle)]" {
-                    img src=(p.image)
+            div class="flex flex-col sm:flex-row gap-0 relative z-[2]" {
+                figure class="shrink-0 overflow-hidden sm:w-56 aspect-video sm:aspect-auto sm:self-stretch border-b sm:border-b-0 sm:border-r border-[var(--border-subtle)]" {
+                    img src=(asset(&p.image))
                         alt=(p.title)
-                        width="640" height="360"
+                        width="448" height="252"
                         loading="lazy" decoding="async"
-                        class="w-full h-full object-cover transition-transform duration-500 hover:scale-105";
+                        class="w-full h-full object-cover";
                 }
-                div class="p-5 flex flex-col flex-1 relative z-[2]" {
-                    div class="flex items-center justify-between mb-2" {
-                        h3 class="text-[var(--foreground)] font-semibold" { (p.title) }
-                        span class="t-caption" { (p.status_label) }
+                div class="flex-1 p-5 min-w-0" {
+                    div class="flex items-baseline justify-between gap-3 mb-2" {
+                        a href=(format!("/{locale}/projects/{}", p.id))
+                          class="text-[var(--foreground)] font-semibold hover:text-[var(--accent-warm)] transition-colors" {
+                            (p.title)
+                        }
+                        span class="t-caption shrink-0" { (p.status_label) }
                     }
-                    p class="t-small leading-relaxed mb-4 flex-1 line-clamp-3" { (p.description) }
+                    p class="t-small leading-relaxed mb-4" { (p.description) }
                     @if !p.technologies.is_empty() {
-                        div class="flex flex-wrap gap-1.5" {
-                            @for tech in p.technologies.iter().take(4) {
+                        div class="flex flex-wrap gap-1.5 mb-4" {
+                            @for tech in &p.technologies {
                                 span class="px-2 py-0.5 text-[10px] rounded-md text-[var(--text-secondary)] border border-[var(--border-subtle)]" { (tech) }
+                            }
+                        }
+                    }
+                    div class="flex flex-wrap gap-4 text-sm" {
+                        a href=(format!("/{locale}/projects/{}", p.id))
+                          class="inline-flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--accent-warm)] transition-colors" {
+                            (m.projects.view_details) (icon_arrow_right())
+                        }
+                        @if let Some(url) = &p.live_url {
+                            a href=(url) target="_blank" rel="noopener noreferrer"
+                              class="inline-flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--accent-warm)] transition-colors" {
+                                (m.projects.view_live) (icon_external())
+                            }
+                        }
+                        @if let Some(url) = &p.code_url {
+                            a href=(url) target="_blank" rel="noopener noreferrer"
+                              class="inline-flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--accent-warm)] transition-colors" {
+                                (m.projects.view_code) (icon_external())
+                            }
+                        }
+                        @if let Some(url) = &p.docs_url {
+                            a href=(url) target="_blank" rel="noopener noreferrer"
+                              class="inline-flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--accent-warm)] transition-colors" {
+                                (m.projects.view_docs) (icon_external())
                             }
                         }
                     }
@@ -272,6 +299,10 @@ fn project_card(locale: &str, _m: &Messages, p: &ProjectItem) -> Markup {
             }
         }
     }
+}
+
+fn icon_arrow_right() -> Markup {
+    html! { (PreEscaped(r#"<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>"#)) }
 }
 
 fn icon_arrow_left() -> Markup {

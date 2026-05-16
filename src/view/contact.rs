@@ -16,19 +16,18 @@ pub fn body(_state: &AppState, _locale: &str, m: &Messages) -> Markup {
 
                 section class="border-t border-[var(--border-subtle)] pt-8" {
                     h2 class="t-caption mb-5" { (m.contact.channel_heading) }
-                    ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-8" {
+                    ul class="grid grid-cols-1 sm:grid-cols-2 gap-2" {
                         (channel_link(&m.social.email.label, &m.social.email.href, icon_mail(), false))
                         (channel_link(&m.social.imessage.label, &m.social.imessage.href, icon_message(), false))
                         (channel_link(&m.social.github.label, &m.social.github.href, icon_github(), true))
                         (channel_link(&m.social.linkedin.label, &m.social.linkedin.href, icon_linkedin(), true))
+                        (channel_toggle(&m.contact.form_channel))
                     }
 
-                    div class="rounded-xl border border-[var(--border-subtle)] p-6"
-                        style="background-color: var(--surface-1);" {
-                        div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2 mb-6" {
-                            h3 class="text-[var(--foreground)] font-semibold" { (m.contact.form_channel) }
-                            p class="t-small" data-contact-hint { (m.contact.form_channel_hint) }
-                        }
+                    div class="hidden mt-6 rounded-xl border border-[var(--border-subtle)] p-6"
+                        style="background-color: var(--surface-1);"
+                        data-contact-form-panel {
+                        p class="t-small mb-6" data-contact-hint { (m.contact.form_channel_hint) }
                         (form(m))
                     }
                 }
@@ -59,6 +58,26 @@ pub fn extra_schemas(state: &AppState, locale: &str, m: &Messages) -> Vec<Value>
     ]
 }
 
+fn channel_toggle(label: &str) -> Markup {
+    html! {
+        li {
+            button type="button"
+                   data-contact-form-toggle
+                   aria-expanded="false"
+                   aria-controls="contact-form-panel"
+                   class="w-full flex items-center gap-3 rounded-lg border border-transparent px-4 py-3 hover:border-[var(--border-glass)] hover:bg-[var(--surface-2)] transition-colors text-left text-[var(--text-secondary)] hover:text-[var(--foreground)] cursor-pointer" {
+                span class="inline-flex w-8 h-8 items-center justify-center rounded-md"
+                     style="color: var(--accent-warm); background-color: var(--primary-accent-soft);" {
+                    (icon_form())
+                }
+                span class="font-medium" { (label) }
+            }
+        }
+    }
+}
+
+fn icon_form() -> Markup { html! { (PreEscaped(r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10"/><path d="M7 13h7"/><path d="M7 17h4"/></svg>"#)) } }
+
 fn channel_link(label: &str, href: &str, icon: Markup, external: bool) -> Markup {
     html! {
         li {
@@ -79,7 +98,7 @@ fn channel_link(label: &str, href: &str, icon: Markup, external: bool) -> Markup
 fn form(m: &Messages) -> Markup {
     let f = &m.contact.form;
     html! {
-        form class="space-y-5" novalidate action="/api/contact" method="post" data-contact-form {
+        form id="contact-form-panel" class="space-y-5" novalidate action="/api/contact" method="post" data-contact-form {
             div class="absolute opacity-0 h-0 w-0 overflow-hidden" aria-hidden="true" {
                 label for="_honeypot" { "Do not fill" }
                 input type="text" id="_honeypot" name="_honeypot" tabindex="-1" autocomplete="off";

@@ -70,20 +70,16 @@ pub async fn projects_list(State(state): State<AppState>, ctx: LocaleCtx) -> Mar
 
 pub async fn project_detail(
     State(state): State<AppState>,
-    Path((locale, id)): Path<(String, String)>,
+    ctx: LocaleCtx,
+    Path(id): Path<String>,
 ) -> Response {
-    if !state.i18n.has(&locale) {
-        return axum::response::Redirect::permanent("/").into_response();
-    }
-    let messages = state.i18n.get(&locale);
-    let m = messages.as_ref();
-
+    let m = ctx.messages.as_ref();
     let path = format!("/projects/{id}");
     let Some(project) = view::projects::find(m, &id) else {
-        let body = view::not_found::body(&locale, m);
+        let body = view::not_found::body(&ctx.locale, m);
         let page = Page::new(
             &state,
-            &locale,
+            &ctx.locale,
             m,
             &path,
             m.notfound.title.clone(),
@@ -95,12 +91,12 @@ pub async fn project_detail(
 
     let mut page = Page::new(
         &state,
-        &locale,
+        &ctx.locale,
         m,
         &path,
         project.title.clone(),
         project.description.clone(),
-        view::projects::detail_body(&state, &locale, m, project),
+        view::projects::detail_body(&state, &ctx.locale, m, project),
     );
     page.og_type = "article";
     page.og_image = Some(if project.image.starts_with("http") {
@@ -108,7 +104,7 @@ pub async fn project_detail(
     } else {
         format!("{}{}", state.settings.base_url, project.image)
     });
-    page.extra_schemas = view::projects::detail_extra_schemas(&state, &locale, m, project);
+    page.extra_schemas = view::projects::detail_extra_schemas(&state, &ctx.locale, m, project);
     layout(page).into_response()
 }
 
@@ -142,13 +138,14 @@ pub async fn impressum(State(state): State<AppState>, ctx: LocaleCtx) -> Markup 
     layout(page)
 }
 
-#[allow(dead_code)]
-pub async fn not_found(State(state): State<AppState>, ctx: LocaleCtx) -> Response {
-    let m = ctx.messages.as_ref();
-    let body = view::not_found::body(&ctx.locale, m);
+pub async fn fallback_not_found(State(state): State<AppState>) -> Response {
+    let locale = state.settings.default_locale.clone();
+    let messages = state.i18n.get(&locale);
+    let m = messages.as_ref();
+    let body = view::not_found::body(&locale, m);
     let page = Page::new(
         &state,
-        &ctx.locale,
+        &locale,
         m,
         "/404",
         m.notfound.title.clone(),

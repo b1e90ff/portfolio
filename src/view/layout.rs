@@ -7,6 +7,14 @@ use crate::locale::alternate_links;
 use crate::state::AppState;
 use crate::view::{nav, schema};
 
+pub fn asset(url: &str) -> String {
+    if url.starts_with("http") || url.contains('?') {
+        url.to_string()
+    } else {
+        format!("{url}?v={}", env!("CARGO_PKG_VERSION"))
+    }
+}
+
 pub struct Page<'a> {
     pub state: &'a AppState,
     pub locale: &'a str,
@@ -114,7 +122,7 @@ pub fn layout(p: Page<'_>) -> Markup {
                 link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png";
                 link rel="manifest" href="/site.webmanifest";
 
-                link rel="stylesheet" href="/css/main.css";
+                link rel="stylesheet" href={ "/css/main.css?v=" (env!("CARGO_PKG_VERSION")) };
 
                 script {
                     (PreEscaped(THEME_INIT))
@@ -136,7 +144,7 @@ pub fn layout(p: Page<'_>) -> Markup {
                     (p.body)
                 }
                 (nav::footer(p.state, p.locale, p.messages))
-                script src="/js/app.js" defer {}
+                script src={ "/js/app.js?v=" (env!("CARGO_PKG_VERSION")) } defer {}
             }
         }
     }

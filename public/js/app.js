@@ -61,7 +61,6 @@
         const elements = document.querySelectorAll('[data-fade]');
         if (!elements.length) return;
         if (!('IntersectionObserver' in window) || prefersReducedMotion) {
-            elements.forEach((el) => el.classList.add('is-visible'));
             return;
         }
         const io = new IntersectionObserver(
@@ -75,7 +74,10 @@
             },
             { threshold: 0.08, rootMargin: '0px 0px -8% 0px' },
         );
-        elements.forEach((el) => io.observe(el));
+        elements.forEach((el) => {
+            el.setAttribute('data-fade-init', '');
+            io.observe(el);
+        });
     };
 
     const magnetic = () => {
@@ -151,6 +153,20 @@
         });
     };
 
+    const contactFormToggle = () => {
+        const toggle = document.querySelector('[data-contact-form-toggle]');
+        const panel = document.querySelector('[data-contact-form-panel]');
+        if (!toggle || !panel) return;
+        toggle.addEventListener('click', () => {
+            const open = panel.classList.toggle('hidden');
+            toggle.setAttribute('aria-expanded', String(!open));
+            if (!open) {
+                const first = panel.querySelector('input, textarea');
+                first?.focus();
+            }
+        });
+    };
+
     const contactForm = () => {
         const form = document.querySelector('[data-contact-form]');
         if (!form) return;
@@ -201,6 +217,7 @@
         magnetic();
         cardSpotlight();
         projectsFilter();
+        contactFormToggle();
         contactForm();
     };
 

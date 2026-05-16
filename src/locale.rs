@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use axum::extract::{FromRequestParts, Path};
+use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
-use axum::response::{IntoResponse, Redirect, Response};
+use axum::response::{IntoResponse, Response};
 
 use crate::i18n::Messages;
 use crate::state::AppState;
@@ -17,7 +17,7 @@ pub struct LocaleNotSupported;
 
 impl IntoResponse for LocaleNotSupported {
     fn into_response(self) -> Response {
-        Redirect::permanent("/").into_response()
+        axum::http::StatusCode::NOT_FOUND.into_response()
     }
 }
 
@@ -28,17 +28,21 @@ impl FromRequestParts<AppState> for LocaleCtx {
         parts: &mut Parts,
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
-        let Path(locale): Path<String> = Path::from_request_parts(parts, state)
-            .await
-            .map_err(|_| LocaleNotSupported)?;
+        let locale = parts
+            .uri
+            .path()
+            .trim_start_matches('/')
+            .split('/')
+            .next()
+            .unwrap_or("");
 
-        if !state.i18n.has(&locale) {
+        if !state.i18n.has(locale) {
             return Err(LocaleNotSupported);
         }
 
         Ok(Self {
-            locale: locale.clone(),
-            messages: state.i18n.get(&locale),
+            locale: locale.to_string(),
+            messages: state.i18n.get(locale),
         })
     }
 }

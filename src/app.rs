@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use axum::Router;
-use axum::routing::get;
+use axum::routing::{get, post};
 use http::HeaderValue;
 use http::header::CACHE_CONTROL;
 use tower_http::catch_panic::CatchPanicLayer;
@@ -12,29 +12,43 @@ use tower_http::set_header::SetResponseHeaderLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 
-use axum::routing::post;
-
 use crate::routes::{api, pages, seo};
 use crate::state::AppState;
 
 pub fn router(state: AppState) -> Router {
-    let pages = Router::new()
+    let mut pages_router = Router::new()
         .route("/healthz", get(health))
         .route("/", get(root_redirect))
         .route("/api/health", get(api::health))
         .route("/api/contact", post(api::contact))
         .route("/sitemap.xml", get(seo::sitemap))
         .route("/robots.txt", get(seo::robots))
-        .route("/site.webmanifest", get(seo::manifest))
-        .route("/{locale}", get(pages::home))
-        .route("/{locale}/about", get(pages::about))
-        .route("/{locale}/projects", get(pages::projects_list))
-        .route("/{locale}/projects/{id}", get(pages::project_detail))
-        .route("/{locale}/contact", get(pages::contact))
-        .route("/{locale}/opengraph-image", get(seo::opengraph_image))
-        .route("/{locale}/privacy", get(pages::privacy))
-        .route("/{locale}/impressum", get(pages::impressum))
-        .with_state(state);
+        .route("/site.webmanifest", get(seo::manifest));
+
+    // Register locale-prefixed routes per configured locale rather than via a
+    // single `/{locale}` wildcard. The wildcard variant collides with static
+    // prefixes (`/images`, `/css`, `/favicon.ico`) because matchit treats a
+    // three-segment dynamic match as more specific than a two-segment nest.
+    for locale in state.i18n.locales() {
+        let prefix = format!("/{locale}");
+        pages_router = pages_router
+            .route(&prefix, get(pages::home))
+            .route(&format!("{prefix}/about"), get(pages::about))
+            .route(&format!("{prefix}/projects"), get(pages::projects_list))
+            .route(
+                &format!("{prefix}/projects/{{id}}"),
+                get(pages::project_detail),
+            )
+            .route(&format!("{prefix}/contact"), get(pages::contact))
+            .route(
+                &format!("{prefix}/opengraph-image"),
+                get(seo::opengraph_image),
+            )
+            .route(&format!("{prefix}/privacy"), get(pages::privacy))
+            .route(&format!("{prefix}/impressum"), get(pages::impressum));
+    }
+
+    let pages_router = pages_router.with_state(state.clone());
 
     let images = Router::new()
         .fallback_service(serve_dir("public/images"))
@@ -44,13 +58,26 @@ pub fn router(state: AppState) -> Router {
         .fallback_service(serve_dir("public/css"))
         .layer(immutable_cache());
 
+    let fonts = Router::new()
+        .fallback_service(serve_dir("assets/fonts"))
+        .layer(immutable_cache());
+
+    let not_found_router = Router::new()
+        .fallback(pages::fallback_not_found)
+        .with_state(state.clone());
+    let public_serve = ServeDir::new("public")
+        .precompressed_gzip()
+        .precompressed_br()
+        .append_index_html_on_directories(false)
+        .not_found_service(not_found_router);
     let public_assets = Router::new()
-        .fallback_service(serve_dir("public"))
+        .fallback_service(public_serve)
         .layer(short_cache());
 
-    pages
+    pages_router
         .nest("/images", images)
         .nest("/css", css)
+        .nest("/fonts", fonts)
         .fallback_service(public_assets)
         .layer(SetResponseHeaderLayer::if_not_present(
             http::header::X_FRAME_OPTIONS,
@@ -188,7 +215,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn unknown_locale_falls_back() {
+    async fn unknown_locale_returns_404() {
         let res = test_app()
             .oneshot(
                 Request::builder()
@@ -198,7 +225,7 @@ mod tests {
             )
             .await
             .unwrap();
-        assert_eq!(res.status(), StatusCode::PERMANENT_REDIRECT);
+        assert_eq!(res.status(), StatusCode::NOT_FOUND);
     }
 
     #[tokio::test]
