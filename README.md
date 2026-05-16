@@ -18,11 +18,20 @@ Visit http://localhost:3000.
 
 ### Production
 
+Single host with Docker:
+
 ```bash
 docker compose up -d --build
 ```
 
-Multi-stage image, non-root uid 10001, read-only rootfs, all caps dropped.
+Kubernetes via the bundled Helm chart:
+
+```bash
+helm install portfolio oci://ghcr.io/b1e90ff/charts/portfolio-service \
+  -f helm/values-production.yaml
+```
+
+Both ship the same multi-stage image: non-root uid 10001, read-only rootfs, all caps dropped.
 
 ### Adding a Locale
 

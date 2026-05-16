@@ -4,6 +4,7 @@ description: Portfolio Web Service
 type: application
 version: 1.0.0
 appVersion: "1.0.0"
+icon: https://tat.systems/favicon.ico
 dependencies:
   - name: web-service
     version: ">=1.0.1"
