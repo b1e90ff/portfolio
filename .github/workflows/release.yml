@@ -99,6 +99,6 @@ jobs:
           ref: v${{ needs.semantic-release.outputs.new-release-version }}
       - uses: b1e90ff/action-helm-chart@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_TOKEN }}
           mode: release
           chart-directory: helm
