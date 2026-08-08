@@ -63,7 +63,7 @@ maud   = { version = "0.27", features = ["axum"] }
 chrono = { version = "0.4", features = ["clock", "serde"], default-features = false }
 url    = "2"
 
-resvg = { version = "0.47", default-features = false, features = ["text", "raster-images"] }
+resvg = { version = "0.48", default-features = false, features = ["text", "raster-images"] }
 
 [dev-dependencies]
 http-body-util = "0.1"
