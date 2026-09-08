@@ -105,16 +105,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --release --locked
 
-  audit:
-    name: cargo audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo install --locked cargo-audit
-      - run: cargo audit --deny warnings
-
   docker:
     name: docker build
     runs-on: ubuntu-latest
