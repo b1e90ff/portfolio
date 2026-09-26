@@ -118,7 +118,10 @@ The chart wraps the generic `web-service` and `istio-sidecar-configurator` chart
 ## Quality Gates
 
 ```bash
-make check    # fmt --check + clippy -D warnings + tests
+make check    # fmt --check + clippy -D warnings + Rust tests + frontend unit tests
+make e2e      # Playwright smoke tests against a local server (desktop + mobile)
 ```
 
-CI on every push and PR runs fmt, clippy, test, release build, cargo-audit, and a Docker build.
+Frontend unit tests run the browser modules under `node --test`; `tests/js/register.mjs` maps the `three` import map entries to `public/vendor`. First Playwright run locally: `npm ci && npx playwright install chromium`.
+
+CI on every push and PR runs fmt, clippy, Rust tests, frontend unit tests, browser smoke tests, release build, cargo-audit, and a Docker build.

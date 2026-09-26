@@ -1,0 +1,15 @@
+{
+  "name": "portfolio-frontend-tests",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.15"
+  },
+  "scripts": {
+    "test:js": "node --import ./tests/js/register.mjs --test tests/js/",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}

@@ -5,9 +5,14 @@ Cargo.lock.bak
 
 # Node / Tailwind toolchain
 /node_modules
-package-lock.json
 yarn.lock
 pnpm-lock.yaml
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
 
 # Build output
 /public/css/
