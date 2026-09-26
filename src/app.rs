@@ -64,6 +64,10 @@ pub fn router(state: AppState) -> Router {
         .fallback_service(serve_dir("assets/fonts"))
         .layer(immutable_cache());
 
+    let vendor = Router::new()
+        .fallback_service(serve_dir("public/vendor"))
+        .layer(immutable_cache());
+
     let not_found_router = Router::new()
         .fallback(pages::fallback_not_found)
         .with_state(state.clone());
@@ -80,6 +84,7 @@ pub fn router(state: AppState) -> Router {
         .nest("/images", images)
         .nest("/css", css)
         .nest("/fonts", fonts)
+        .nest("/vendor", vendor)
         .fallback_service(public_assets)
         .layer(client_ip_source.into_extension())
         .layer(SetResponseHeaderLayer::if_not_present(
@@ -331,6 +336,24 @@ mod tests {
         assert_eq!(h.get("x-content-type-options").unwrap(), "nosniff");
         assert!(h.contains_key("referrer-policy"));
         assert!(h.contains_key("permissions-policy"));
+    }
+
+    #[tokio::test]
+    async fn vendored_assets_are_cached_immutably() {
+        let res = test_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/vendor/three-0.186.1/three.module.js")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+        assert_eq!(
+            res.headers()["cache-control"],
+            "public, max-age=31536000, immutable"
+        );
     }
 
     #[tokio::test]
