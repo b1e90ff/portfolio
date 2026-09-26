@@ -6,7 +6,7 @@
     "node": ">=22.15"
   },
   "scripts": {
-    "test:js": "node --import ./tests/js/register.mjs --test tests/js/",
+    "test:js": "node --import ./tests/js/register.mjs --test 'tests/js/*.test.mjs'",
     "test:e2e": "playwright test"
   },
   "devDependencies": {

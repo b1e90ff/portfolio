@@ -52,7 +52,7 @@ test:
 	cargo test --all-features
 
 test-js:
-	node --import ./tests/js/register.mjs --test tests/js/
+	node --import ./tests/js/register.mjs --test 'tests/js/*.test.mjs'
 
 e2e: css
 	npx playwright test
