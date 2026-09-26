@@ -1,8 +1,8 @@
 use std::env;
 
 use anyhow::{Context, Result};
-use opentelemetry::KeyValue;
 use opentelemetry::trace::TracerProvider as _;
+use opentelemetry::{Key, KeyValue};
 use opentelemetry_otlp::{Protocol, SpanExporter, WithExportConfig};
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
@@ -74,16 +74,27 @@ fn tracer_provider() -> Result<SdkTracerProvider> {
         .build()
         .context("build otlp span exporter")?;
 
-    let mut resource = Resource::builder()
-        .with_attribute(KeyValue::new("service.version", env!("CARGO_PKG_VERSION")));
-    if env::var_os("OTEL_SERVICE_NAME").is_none() {
-        resource = resource.with_service_name(env!("CARGO_PKG_NAME"));
-    }
-
     Ok(SdkTracerProvider::builder()
         .with_batch_exporter(exporter)
-        .with_resource(resource.build())
+        .with_resource(resource())
         .build())
+}
+
+fn resource() -> Resource {
+    let builder = Resource::builder()
+        .with_attribute(KeyValue::new("service.version", env!("CARGO_PKG_VERSION")));
+    if has_default_service_name(&Resource::builder().build()) {
+        builder.with_service_name(env!("CARGO_PKG_NAME")).build()
+    } else {
+        builder.build()
+    }
+}
+
+/// True when neither OTEL_SERVICE_NAME nor OTEL_RESOURCE_ATTRIBUTES provided a service name.
+fn has_default_service_name(resource: &Resource) -> bool {
+    resource
+        .get(&Key::new("service.name"))
+        .is_none_or(|name| name.as_str().starts_with("unknown_service"))
 }
 
 #[cfg(test)]
@@ -105,6 +116,20 @@ mod tests {
                 "{var} should enable export"
             );
         }
+    }
+
+    #[test]
+    fn sdk_fallback_service_name_counts_as_default() {
+        let named = |name: &str| {
+            Resource::builder_empty()
+                .with_service_name(name.to_string())
+                .build()
+        };
+        assert!(has_default_service_name(&Resource::builder_empty().build()));
+        assert!(has_default_service_name(&named(
+            "unknown_service:portfolio"
+        )));
+        assert!(!has_default_service_name(&named("portfolio-staging")));
     }
 
     #[test]
