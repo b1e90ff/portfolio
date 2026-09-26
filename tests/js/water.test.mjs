@@ -31,3 +31,10 @@ test('consecutive segments never turn sharply, so the bend reads as a curve', ()
         prev = dir;
     }
 });
+
+test('a fall without a flat head still has no degenerate rows', () => {
+    const r = rows(fallSheet(.5, 0, .12, 2, .3));
+    for (let i = 1; i < r.length; i++) {
+        assert.ok(Math.hypot(r[i].y - r[i - 1].y, r[i].z - r[i - 1].z) > 1e-6, `row ${i} repeats`);
+    }
+});

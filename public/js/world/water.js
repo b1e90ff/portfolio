@@ -48,6 +48,7 @@ export function fallSheet(w, spill, bend, drop, arc, wTop = w) {
     // Each section gets its own rows so the short bend stays smooth on tall falls.
     const stations = [];
     const section = (from, length, count) => {
+        if (length <= 0) return;
         for (let i = 0; i < count; i++) stations.push(from + length * i / count);
     };
     section(0, spill, 2);

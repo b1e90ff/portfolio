@@ -92,7 +92,7 @@ export function lantern(ctx, parent, x, y, z) {
     ctx.place('town/lantern', x, y, z, 0, .8, parent);
     ctx.add(new THREE.SphereGeometry(.07, 8, 6), ctx.emissive('#ffc46b', 3), x, y + 1.18, z, parent);
     // A glow sprite instead of a point light: every light costs every lit fragment on mobile GPUs.
-    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: fireKit(ctx).glow, depthWrite: false, blending: THREE.AdditiveBlending }));
+    const halo = new THREE.Sprite(glowKit(ctx).halo);
     halo.position.set(x, y + 1.18, z);
     halo.scale.setScalar(.7);
     parent.add(halo);
@@ -234,7 +234,7 @@ export function campfire(ctx, parent, x, y, z) {
         return m;
     });
     const glow = new THREE.Mesh(new THREE.CircleGeometry(.55, 24), new THREE.MeshBasicMaterial({
-        map: fireKit(ctx).glow, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+        map: glowKit(ctx).texture, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     }));
     glow.rotation.x = -Math.PI / 2;
     glow.position.y = .01;
@@ -274,9 +274,20 @@ function fireKit(ctx) {
     if (!ctx.fireKit) {
         const flame = new THREE.OctahedronGeometry(1, 0);
         flame.translate(0, 1, 0);
-        ctx.fireKit = { flame, spark: new THREE.BoxGeometry(.018, .018, .018), glow: glowTexture() };
+        ctx.fireKit = { flame, spark: new THREE.BoxGeometry(.018, .018, .018) };
     }
     return ctx.fireKit;
+}
+
+function glowKit(ctx) {
+    if (!ctx.glowKit) {
+        const texture = glowTexture();
+        ctx.glowKit = {
+            texture,
+            halo: new THREE.SpriteMaterial({ map: texture, depthWrite: false, blending: THREE.AdditiveBlending }),
+        };
+    }
+    return ctx.glowKit;
 }
 
 function glowTexture() {
