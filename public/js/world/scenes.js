@@ -3,6 +3,7 @@ import { angDiff, at, hash, island, radiusFn } from './engine.js';
 import * as P from './props.js';
 
 const BAY = 1.05;
+const FALL = .95;
 
 function reserver(group) {
     const occ = [];
@@ -18,66 +19,73 @@ export function basecamp(ctx, o) {
         z: o.z,
         depth: 3.2,
         levels: [
-            { r0: 3.45, amp: .2, seed: .5, h: .91, bay: { a: BAY, depth: 1.25, width: .3 } },
+            { r0: 3.95, amp: .2, seed: .5, h: .91, bay: { a: BAY, depth: 1.25, width: .3 } },
             { c: { x: -.75, z: -1.1 }, r0: 1.95, amp: .15, seed: 2, h: 1 },
         ],
     });
     const g = isl.group;
     const [T, U] = isl.levels;
     const occ = reserver(g);
-    occ.push({ x: U.c.x, z: U.c.z, r: 2.05 });
 
-    const [sx, sz] = at(U.fn, U.c, .95, -.02);
+    const [sx, sz] = at(U.fn, U.c, FALL, -.02);
     const [ex, ez] = at(T.fn, T.c, BAY, -.05);
-    P.waterfall(ctx, g, sx, sz, U.top - .02, T.top + .02, .95, .5);
-    P.waterfall(ctx, g, ex, ez, T.top + .02, -2.4, BAY, .62);
+    const [ux, uz] = at(U.fn, U.c, FALL, -.22);
+    const [lx, lz] = at(T.fn, T.c, BAY, -.38);
+    P.waterfall(ctx, g, ux, uz, U.top - .02, T.top + .02, FALL, .5, .2);
+    P.waterfall(ctx, g, lx, lz, T.top + .02, -2.4, BAY, .62, .33);
     const len = Math.hypot(ex - sx, ez - sz);
     const water = new THREE.MeshStandardMaterial({ color: '#8fc4e6', emissive: '#1f5a80', emissiveIntensity: .3, roughness: .2, transparent: true, opacity: .9 });
     const stream = new THREE.Mesh(new THREE.PlaneGeometry(len, .5), water);
     stream.rotation.x = -Math.PI / 2;
     stream.rotation.z = -Math.atan2(ez - sz, ex - sx);
-    stream.position.set((sx + ex) / 2, T.top + .07, (sz + ez) / 2);
+    stream.position.set((sx + ex) / 2, T.top + .01, (sz + ez) / 2);
     g.add(stream);
-    for (let i = 0; i <= 6; i++) {
-        const k = i / 6;
-        occ.push({ x: sx + (ex - sx) * k, z: sz + (ez - sz) * k, r: .38 });
+    // The stream blocks the dogs except for a gap at its midpoint where the bridge crosses.
+    for (let i = 0; i <= 12; i++) {
+        if (i >= 4 && i <= 8) continue;
+        const k = i / 12;
+        occ.push({ x: sx + (ex - sx) * k, z: sz + (ez - sz) * k, r: .3 });
     }
+    const streamX = (ex - sx) / len;
+    const streamZ = (ez - sz) / len;
+    const bridge = { x: (sx + ex) / 2, z: (sz + ez) / 2, sx: streamX, sz: streamZ, cx: -streamZ, cz: streamX, halfLength: .6, halfWidth: .3, height: .22 };
+    const barrier = { ax: sx, az: sz, bx: ex, bz: ez, gapFrom: 4.5 / 12, gapTo: 7.5 / 12, gapX: bridge.x, gapZ: bridge.z };
 
     P.house(ctx, g, -1.25, U.top, -1.35, .35);
     P.mast(ctx, g, .2, U.top, -2.1);
     const [hx, hz] = at(T.fn, T.c, -.25, .9);
     P.shed(ctx, g, hx, T.top, hz, -1.9);
     occ.push({ x: hx, z: hz, r: .7 });
-    ctx.place('nature/bridge_wood', (sx + ex) / 2, T.top - .12, (sz + ez) / 2, -Math.atan2(ez - sz, ex - sx) + Math.PI / 2, .9, g);
-    P.edgeRocks(ctx, g, T, 26, -.2, BAY);
-    P.edgeRocks(ctx, g, U, 12, T.top - .05);
-    P.trees(ctx, g, T, [2.3, 2.7, 3.1, 3.6, 4.2, 4.6, 5.2, 5.8, .3]);
+    P.woodBridge(ctx, g, bridge, T.top);
+    const fx = -2;
+    const fz = 2.2;
+    P.cliffRocks(ctx, g, T, T.top, T.top, 34, BAY);
+    P.cliffRocks(ctx, g, U, U.top, U.top - T.top, 16, FALL);
+    P.trees(ctx, g, T, [2.3, 2.7, 3.1, 3.6, 4.2, 4.6, 5.2, 5.8, .3], .45, 1, (x, z) => Math.hypot(x - fx, z - fz) < 1);
     P.trees(ctx, g, U, [3.4, 4.1, 4.9, 2.6], .35, 1.1);
     const onPlateau = (x, z) => Math.hypot(x - U.c.x, z - U.c.z) < U.fn(Math.atan2(z - U.c.z, x - U.c.x)) + .1;
     P.tufts(ctx, g, T, 16, 1.6, (x, z) => onPlateau(x, z)
         || Math.abs(angDiff(Math.atan2(z, x), BAY)) < .35
-        || Math.hypot(x + .2, z - 1.45) < .95
-        || Math.hypot(x + 1.35, z - 2.05) < .6);
+        || Math.hypot(x + .3, z - 1.9) < 1.1
+        || Math.hypot(x - fx, z - fz) < .7);
     P.tufts(ctx, g, U, 7, .9);
     for (const [x, z, ry] of [[-.6, -.45, .3], [0, -.2, .6]]) ctx.place('nature/path_stone', x, U.top + .005, z, ry, 1, g);
     for (const [x, z, ry] of [[-1.3, 1.1, .5], [-.4, 1.2, .1], [.4, 1.25, -.2]]) ctx.place('nature/path_stone', x, T.top + .005, z, ry, 1, g);
 
-    const fx = -1.35;
-    const fz = 2.05;
     P.campfire(ctx, g, fx, T.top, fz);
     occ.push({ x: fx, z: fz, r: .5 });
     for (const [dx, dz, ry] of [[-.75, -.25, .3], [.3, .7, 1.9]]) {
         ctx.place('nature/log', fx + dx, T.top, fz + dz, ry, .9, g);
         occ.push({ x: fx + dx, z: fz + dz, r: .32 });
     }
-    ctx.place('survival/barrel', fx - 1, T.top, fz + .55, 0, 1.6, g);
-    occ.push({ x: fx - 1, z: fz + .55, r: .22 });
-    for (const [x, y, z] of [[.35, T.top, 2.6], [-.2, U.top, -.35], [-2.2, T.top, 1.1]]) P.lantern(ctx, g, x, y, z);
+    ctx.place('survival/barrel', fx - .55, T.top, fz - .8, 0, 1.6, g);
+    occ.push({ x: fx - .55, z: fz - .8, r: .22 });
+    for (const [x, y, z] of [[.35, T.top, 2.6], [-.2, U.top, -.35], [-2.6, T.top, .55]]) P.lantern(ctx, g, x, y, z);
 
-    const gold = P.golden(ctx, g, -.1, T.top, 1.4, 0, .8);
-    const white = P.whiteDog(ctx, g, -.7, T.top, 1.9, 0, .95);
-    const walk = P.area(T, occ, { margin: .5, zone: { x: -.35, z: 1.55, r: 1.45 } });
-    P.playTogether(ctx, walk, [[gold, { r: .24, speed: 1.1 }], [white, { r: .17, speed: 1.25 }]], T.top);
+    const ares = P.golden(ctx, g, -.1, T.top, 1.7, 0, .8);
+    const cardea = P.husky(ctx, g, -.8, T.top, 2.3, 0, .9);
+    const walk = P.area(T, occ, { margin: .5, zone: { x: .2, z: 1.7, r: 2.55 }, hole: { lvl: U, pad: .3 }, bridge, barrier });
+    P.playTogether(ctx, walk, [[ares, { r: .24, speed: 1.1 }], [cardea, { r: .16, speed: 1.3 }]], T.top);
     bob(ctx, g, o.y, .0008, .08, 0);
     return isl;
 }
@@ -95,10 +103,11 @@ export function mini(ctx, o) {
     const blocked = (pad) => (x, z) => occ.some((c) => Math.hypot(x - c.x, z - c.z) < c.r + pad);
     if (U) occ.push({ x: U.c.x, z: U.c.z, r: U.fn(0) });
     MOTIFS[o.motif](ctx, g, { y: L.top, yu: U?.top, r, seed: o.seed, labels: o.labels });
-    P.edgeRocks(ctx, g, L, 11, -.15);
+    P.cliffRocks(ctx, g, L, L.top, L.top, 16);
     if (U) {
-        P.edgeRocks(ctx, g, U, 7, L.top - .05, Math.PI / 2);
-        P.tufts(ctx, g, U, 4, .3);
+        P.cliffRocks(ctx, g, U, U.top, U.top - L.top, 9, Math.PI / 2);
+        const clear = g.userData.clear || [];
+        P.tufts(ctx, g, U, 4, .3, (x, z) => clear.some((c) => Math.hypot(x - c.x, z - c.z) < c.r));
     }
     P.tufts(ctx, g, L, 12, r * .55, blocked(.12));
     const backTrees = [3.5, 4.2, 4.9, 5.6, .15, 2.95];
@@ -139,20 +148,21 @@ const MOTIFS = {
     },
     about(ctx, g, { y, yu, r, seed }) {
         const R = g.userData.reserve;
-        if (yu) ctx.place('survival/tent-canvas', -.1, yu, -1.22, 0, 2, g);
-        P.campfire(ctx, g, -.35, y, .35);
-        R(-.35, .35, .45);
-        for (const [x, z, ry] of [[-.95, .2, .2], [-.3, -.2, 1.6]]) {
+        if (yu) {
+            ctx.place('survival/tent-canvas', -.1, yu, -1.3, 0, 2, g);
+            P.sleepingHusky(ctx, g, -.12, yu, -1.02, -.45, .9);
+            g.userData.clear = [{ x: -.1, z: -1.1, r: .5 }];
+        }
+        P.campfire(ctx, g, -.75, y, .15);
+        R(-.75, .15, .45);
+        for (const [x, z, ry] of [[-1.35, .35, .2], [-.15, .6, 1.6]]) {
             ctx.place('nature/log', x, y, z, ry, .8, g);
             R(x, z, .3);
         }
-        P.whiteDog(ctx, g, -1.05, y, .8, .35, .9);
-        R(-1.05, .8, .3);
-        P.lantern(ctx, g, -1.25, y, -.35);
-        if (yu) ctx.place('survival/resource-wood', .45, yu, -1.05, .3, 1.4, g);
-        const dog = P.golden(ctx, g, .9, y, .5, 2.6, .8);
+        P.lantern(ctx, g, -1.55, y, -.45);
+        const dog = P.golden(ctx, g, 1, y, .7, 2.6, .8);
         const ground = { fn: radiusFn({ r0: r, amp: .12, seed }), c: { x: 0, z: 0 } };
-        P.playFetch(ctx, g, P.area(ground, g.userData.occ, { margin: .5, zone: { x: .45, z: .55, r: 1.45 } }), dog, y);
+        P.playFetch(ctx, g, P.area(ground, g.userData.occ, { margin: .5, zone: { x: .5, z: .75, r: 1.6 } }), dog, y);
     },
     experience(ctx, g, { y, yu, labels }) {
         const R = g.userData.reserve;

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { angDiff, createStage } from './engine.js';
+import { airship } from './props.js';
 import { basecamp, mini } from './scenes.js';
 
 const OVERVIEW_YAW = -.5;
@@ -8,9 +9,9 @@ const NARROW = 860;
 const ASIDE = 'overview-aside';
 
 const ISLANDS = {
-    basecamp: { pos: [0, 0, 0], pin: 5.6, land: { t: [0, 1.3, .6], dist: 15, height: 6.5, yaw: .2 } },
+    basecamp: { pos: [0, 0, 0], pin: 5.6, land: { t: [0, 1.3, .8], dist: 16.5, height: 7, yaw: .2 } },
     projects: { pos: [12, 2.4, -6], r: 2.2, seed: 2, plateau: true, front: OVERVIEW_YAW + .1 },
-    about: { pos: [-12, 1.6, -6], r: 2.3, seed: 4, plateau: true, plateauTrees: false, front: OVERVIEW_YAW - .15 },
+    about: { pos: [-12.5, 1.6, -6], r: 2.5, seed: 4, plateau: true, plateauTrees: false, front: OVERVIEW_YAW - .15 },
     experience: { pos: [-9, -1.4, 9], r: 2, seed: 8, front: OVERVIEW_YAW - .1 },
     contact: { pos: [9.5, -1.2, 9], r: 2, seed: 6, front: OVERVIEW_YAW + .15 },
 };
@@ -22,6 +23,7 @@ const ease = (k) => (k < .5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2);
 export function createWorld(canvas, { mood, island, labels, models, onPick }) {
     const ctx = createStage(canvas, { mode: mood, models, yaw: OVERVIEW_YAW });
     CLOUDS.forEach(([x, y, z, s]) => ctx.cloud(x, y, z, s));
+    airship(ctx, { radius: 17, height: 8, speed: .05 });
 
     /* Portrait screens pull the camera back so the archipelago or landed island still fits. */
     const computeState = (key) => {
@@ -30,7 +32,7 @@ export function createWorld(canvas, { mood, island, labels, models, onPick }) {
         const aspect = w / h;
         if (!ISLANDS[key]) {
             const fit = Math.min(3, Math.max(1, 1.25 / aspect));
-            const aside = key === ASIDE;
+            const aside = key === ASIDE && !(narrow && panelCollapsed);
             return {
                 t: new THREE.Vector3(0, 0, 1),
                 dist: 52 * fit,
@@ -42,27 +44,30 @@ export function createWorld(canvas, { mood, island, labels, models, onPick }) {
         }
         const v = ISLANDS[key];
         const land = v.land || {};
-        const fit = narrow ? Math.min(2.3, Math.max(1, .95 / aspect)) : 1;
+        const fit = narrow ? Math.min(2.3, Math.max(1, (panelCollapsed ? .8 : .95) / aspect)) : 1;
+        const collapsed = narrow && panelCollapsed;
         return {
             t: land.t ? new THREE.Vector3(...land.t) : new THREE.Vector3(v.pos[0], v.pos[1] + .9, v.pos[2]),
             dist: (land.dist || 12.5) * fit,
             height: (land.height || 5.4) * fit,
             yaw: land.yaw ?? v.front,
             offsetX: narrow ? 0 : -.2,
-            offsetY: narrow ? .24 : 0,
+            offsetY: narrow ? (collapsed ? .06 : .24) : 0,
         };
     };
 
     const states = new Map();
     let sizeKey = '';
+    let panelCollapsed = false;
     const stateFor = (key) => {
         const { w, h } = ctx.size();
         if (sizeKey !== `${w}x${h}`) {
             sizeKey = `${w}x${h}`;
             states.clear();
         }
-        if (!states.has(key)) states.set(key, computeState(key));
-        return states.get(key);
+        const cacheKey = `${key}|${panelCollapsed}`;
+        if (!states.has(cacheKey)) states.set(cacheKey, computeState(key));
+        return states.get(cacheKey);
     };
 
     let current = island;
@@ -98,10 +103,20 @@ export function createWorld(canvas, { mood, island, labels, models, onPick }) {
         flight = { from, fromYaw, toYaw, start: performance.now(), done: resolve };
     });
 
-    ctx.onFrame((t) => {
+    const settle = (s, dt) => {
+        const k = ctx.reduced ? 1 : 1 - Math.exp(-dt * 5);
+        const v = ctx.view;
+        v.target.lerp(s.t, k);
+        v.dist += (s.dist - v.dist) * k;
+        v.height += (s.height - v.height) * k;
+        v.offsetX += (s.offsetX - v.offsetX) * k;
+        v.offsetY += (s.offsetY - v.offsetY) * k;
+    };
+
+    ctx.onFrame((t, dt) => {
         const to = stateFor(current);
         if (!flight) {
-            apply(to);
+            settle(to, dt);
             return;
         }
         const k = Math.min(1, (t - flight.start) / FLIGHT_MS);
@@ -196,5 +211,7 @@ export function createWorld(canvas, { mood, island, labels, models, onPick }) {
     }
     const ready = ctx.settled();
 
-    return { ready, fly, trackPins, celebrate, setMood: ctx.setMode };
+    const setPanelCollapsed = (collapsed) => { panelCollapsed = collapsed; };
+
+    return { ready, fly, trackPins, celebrate, setPanelCollapsed, setMood: ctx.setMode };
 }

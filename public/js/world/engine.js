@@ -6,6 +6,8 @@ THREE.ColorManagement.enabled = false;
 
 // Intensities are authored in legacy units; physical lighting needs them scaled by PI.
 const LIGHT = Math.PI;
+// The bevelled grass cap rises this far above the rock body, so props stand on the grass.
+const GRASS = .06;
 
 export const hash = (x, y, z) => {
     const s = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453;
@@ -352,7 +354,7 @@ export function island(ctx, o) {
         const c = L.c || { x: 0, z: 0 };
         blob(ctx, fn, c, y, L.h, i ? '#665446' : '#5d4c40', i ? '#436f40' : '#3d6a3c', g);
         if (i === 0) underside(ctx, fn, c, o.depth || 3, '#4f4038', g);
-        info.levels.push({ fn, c, top: y + L.h });
+        info.levels.push({ fn, c, top: y + L.h + GRASS });
         y += L.h;
     });
     return info;
