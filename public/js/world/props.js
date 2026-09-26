@@ -812,16 +812,16 @@ export function tufts(ctx, parent, lvl, n, maxInset, avoid = () => false) {
     }
 }
 
-function fallTexture() {
+function streakTexture(base, count, seed) {
     const c = document.createElement('canvas');
     c.width = 64;
     c.height = 256;
     const g = c.getContext('2d');
-    g.fillStyle = '#6fb4dc';
+    g.fillStyle = base;
     g.fillRect(0, 0, 64, 256);
-    for (let i = 0; i < 70; i++) {
-        g.fillStyle = `rgba(255,255,255,${.25 + hash(i, 2, 3) * .5})`;
-        g.fillRect(hash(i, 5, 1) * 64, hash(i, 7, 9) * 256, 2 + hash(i, 1, 1) * 4, 10 + hash(i, 3, 3) * 40);
+    for (let i = 0; i < count; i++) {
+        g.fillStyle = `rgba(255,255,255,${.25 + hash(i, seed, 3) * .55})`;
+        g.fillRect(hash(i, 5, seed) * 64, hash(i, 7, 9 + seed) * 256, 2 + hash(i, 1, seed) * 4, 14 + hash(i, 3, seed) * 48);
     }
     const t = new THREE.CanvasTexture(c);
     t.wrapS = THREE.RepeatWrapping;
@@ -829,21 +829,89 @@ function fallTexture() {
     return t;
 }
 
-export function waterfall(ctx, parent, x, z, top, bottom, a, w = .6, spill = 0) {
-    const tex = fallTexture();
-    const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, opacity: .9, emissive: '#2c6f9a', emissiveIntensity: .35, roughness: .2, side: THREE.DoubleSide });
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, top - bottom), mat);
-    m.position.set(x, (top + bottom) / 2, z);
-    m.rotation.y = Math.PI / 2 - a;
-    parent.add(m);
-    ctx.onFrame((t) => { if (!ctx.reduced) tex.offset.y = (t * .0012) % 1; });
+function fadeTexture(fadeFrom) {
+    const c = document.createElement('canvas');
+    c.width = 4;
+    c.height = 128;
+    const g = c.getContext('2d');
+    const grad = g.createLinearGradient(0, 0, 0, 128);
+    grad.addColorStop(0, '#fff');
+    grad.addColorStop(fadeFrom, '#fff');
+    grad.addColorStop(1, '#000');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 4, 128);
+    return new THREE.CanvasTexture(c);
+}
+
+/* Sheet that bulges outward below the lip, like water leaving the edge before it drops. */
+function fallSheet(w, h, arc) {
+    const geo = new THREE.PlaneGeometry(w, h, 1, 14);
+    const p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+        const t = .5 - p.getY(i) / h;
+        p.setZ(i, arc * Math.sqrt(t) + p.getZ(i));
+    }
+    geo.computeVertexNormals();
+    return geo;
+}
+
+export function waterfall(ctx, parent, x, z, top, bottom, a, w = .6, spill = 0, o = {}) {
+    const h = top - bottom;
+    const arc = o.arc ?? Math.min(.35, h * .12);
+    const fade = o.mist ? fadeTexture(.55) : null;
+    const back = streakTexture('#5fa8d6', 40, 2);
+    const front = streakTexture('#8fd0f0', 26, 5);
+    back.repeat.set(1, h / 1.2);
+    front.repeat.set(.8, h / 1.6);
+    const layer = (map, opacity, emissive) => new THREE.MeshStandardMaterial({
+        map, alphaMap: fade, transparent: true, opacity, emissive, emissiveIntensity: .35, roughness: .2, side: THREE.DoubleSide, depthWrite: false,
+    });
+    const group = new THREE.Group();
+    group.position.set(x, (top + bottom) / 2, z);
+    group.rotation.y = Math.PI / 2 - a;
+    parent.add(group);
+    group.add(new THREE.Mesh(fallSheet(w, h, arc), layer(back, .88, '#2c6f9a')));
+    const veil = new THREE.Mesh(fallSheet(w * .78, h, arc), layer(front, .55, '#4f9cc4'));
+    veil.position.z = .025;
+    group.add(veil);
     if (spill > 0) {
-        const lip = new THREE.Mesh(new THREE.PlaneGeometry(spill, w), mat);
+        const lip = new THREE.Mesh(new THREE.PlaneGeometry(spill, w), layer(back, .88, '#2c6f9a'));
         lip.rotation.set(-Math.PI / 2, 0, -a);
         lip.position.set(x - Math.cos(a) * spill / 2, top + .02, z - Math.sin(a) * spill / 2);
         parent.add(lip);
     }
-    return m;
+    const foam = [];
+    if (o.foam || o.mist) {
+        const mat = ctx.flat('#f4fbff', { transparent: true, opacity: .85, depthWrite: false });
+        for (let i = 0; i < 7; i++) {
+            const puff = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 0), mat.clone());
+            puff.userData = { k: i / 7, x: (hash(i, 3, 1) - .5) * w, spin: hash(i, 9, 2) * 6 };
+            group.add(puff);
+            foam.push(puff);
+        }
+    }
+    const base = -h / 2;
+    ctx.onFrame((t) => {
+        if (!ctx.reduced) {
+            back.offset.y = (t * .0009) % 1;
+            front.offset.y = (t * .0016) % 1;
+        }
+        for (const puff of foam) {
+            const k = ctx.reduced ? puff.userData.k : (t * .0005 + puff.userData.k) % 1;
+            const u = puff.userData;
+            if (o.mist) {
+                puff.position.set(u.x * (1 + k), base + h * .3 - k * h * .35, arc + .1 + k * .3);
+                puff.scale.setScalar(.06 + k * .16);
+                puff.material.opacity = .6 * (1 - k);
+            } else {
+                puff.position.set(u.x, base + k * .18, arc + .05 + k * .12);
+                puff.scale.setScalar(.05 + Math.sin(k * Math.PI) * .07);
+                puff.material.opacity = .85 * (1 - k);
+            }
+            puff.rotation.y = u.spin + k * 2;
+        }
+    });
+    return group;
 }
 
 /* Small blimp that circles the archipelago on a slow, gently rising and falling loop. */
@@ -916,4 +984,21 @@ export function woodBridge(ctx, parent, bridge, y) {
         }
     }
     return b;
+}
+
+/* Flat stream whose streaks flow from start to end, matching the waterfalls it connects. */
+export function stream(ctx, parent, sx, sz, ex, ez, y, width) {
+    const len = Math.hypot(ex - sx, ez - sz);
+    const tex = streakTexture('#7fbfe4', 22, 8);
+    tex.center.set(.5, .5);
+    tex.rotation = Math.PI / 2;
+    tex.repeat.set(width / .6, len / 1.2);
+    const mat = new THREE.MeshStandardMaterial({ map: tex, emissive: '#1f5a80', emissiveIntensity: .3, roughness: .2, transparent: true, opacity: .92 });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(len, width), mat);
+    m.rotation.x = -Math.PI / 2;
+    m.rotation.z = -Math.atan2(ez - sz, ex - sx);
+    m.position.set((sx + ex) / 2, y, (sz + ez) / 2);
+    parent.add(m);
+    ctx.onFrame((t) => { if (!ctx.reduced) tex.offset.y = -(t * .0005) % 1; });
+    return m;
 }

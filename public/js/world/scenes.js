@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { angDiff, at, hash, island, radiusFn } from './engine.js';
 import * as P from './props.js';
 
@@ -31,15 +30,10 @@ export function basecamp(ctx, o) {
     const [ex, ez] = at(T.fn, T.c, BAY, -.05);
     const [ux, uz] = at(U.fn, U.c, FALL, -.22);
     const [lx, lz] = at(T.fn, T.c, BAY, -.38);
-    P.waterfall(ctx, g, ux, uz, U.top - .02, T.top + .02, FALL, .5, .2);
-    P.waterfall(ctx, g, lx, lz, T.top + .02, -2.4, BAY, .62, .33);
+    P.waterfall(ctx, g, ux, uz, U.top - .02, T.top + .02, FALL, .5, .2, { arc: .12, foam: true });
+    P.waterfall(ctx, g, lx, lz, T.top + .02, -3.4, BAY, .62, .33, { arc: .3, mist: true });
     const len = Math.hypot(ex - sx, ez - sz);
-    const water = new THREE.MeshStandardMaterial({ color: '#8fc4e6', emissive: '#1f5a80', emissiveIntensity: .3, roughness: .2, transparent: true, opacity: .9 });
-    const stream = new THREE.Mesh(new THREE.PlaneGeometry(len, .5), water);
-    stream.rotation.x = -Math.PI / 2;
-    stream.rotation.z = -Math.atan2(ez - sz, ex - sx);
-    stream.position.set((sx + ex) / 2, T.top + .01, (sz + ez) / 2);
-    g.add(stream);
+    P.stream(ctx, g, sx, sz, ex, ez, T.top + .01, .5);
     // The stream blocks the dogs except for a gap at its midpoint where the bridge crosses.
     for (let i = 0; i <= 12; i++) {
         if (i >= 4 && i <= 8) continue;
