@@ -1,20 +1,10 @@
 import * as THREE from 'three';
 import { angDiff, createStage } from './engine.js';
 import { airship } from './props.js';
+import { ISLANDS, OVERVIEW_YAW, cameraState } from './camera.js';
 import { basecamp, mini } from './scenes.js';
 
-const OVERVIEW_YAW = -.5;
 const FLIGHT_MS = 1900;
-const NARROW = 860;
-const ASIDE = 'overview-aside';
-
-const ISLANDS = {
-    basecamp: { pos: [0, 0, 0], pin: 5.6, land: { t: [0, 1.3, .8], dist: 16.5, height: 7, yaw: .2 } },
-    projects: { pos: [12, 2.4, -6], r: 2.2, seed: 2, plateau: true, front: OVERVIEW_YAW + .1 },
-    about: { pos: [-12.5, 1.6, -6], r: 2.5, seed: 4, plateau: true, plateauTrees: false, front: OVERVIEW_YAW - .15 },
-    experience: { pos: [-9, -1.4, 9], r: 2, seed: 8, front: OVERVIEW_YAW - .1 },
-    contact: { pos: [9.5, -1.2, 9], r: 2, seed: 6, front: OVERVIEW_YAW + .15 },
-};
 
 const CLOUDS = [[-18, 6, -30, 1.3], [16, 9, -36, 1.7], [30, 2, -12, 1.1], [-34, 1, -4, 1.4], [4, 12, -50, 2]];
 
@@ -24,37 +14,6 @@ export function createWorld(canvas, { mood, island, labels, models, onPick }) {
     const ctx = createStage(canvas, { mode: mood, models, yaw: OVERVIEW_YAW });
     CLOUDS.forEach(([x, y, z, s]) => ctx.cloud(x, y, z, s));
     airship(ctx, { radius: 17, height: 8, speed: .05 });
-
-    /* Portrait screens pull the camera back so the archipelago or landed island still fits. */
-    const computeState = (key) => {
-        const { w, h } = ctx.size();
-        const narrow = w <= NARROW;
-        const aspect = w / h;
-        if (!ISLANDS[key]) {
-            const fit = Math.min(3, Math.max(1, 1.25 / aspect));
-            const aside = key === ASIDE && !(narrow && panelCollapsed);
-            return {
-                t: new THREE.Vector3(0, 0, 1),
-                dist: 52 * fit,
-                height: 23 * fit,
-                yaw: OVERVIEW_YAW,
-                offsetX: narrow ? 0 : aside ? -.18 : .16,
-                offsetY: narrow ? (aside ? .28 : -.06) : 0,
-            };
-        }
-        const v = ISLANDS[key];
-        const land = v.land || {};
-        const fit = narrow ? Math.min(2.3, Math.max(1, (panelCollapsed ? .8 : .95) / aspect)) : 1;
-        const collapsed = narrow && panelCollapsed;
-        return {
-            t: land.t ? new THREE.Vector3(...land.t) : new THREE.Vector3(v.pos[0], v.pos[1] + .9, v.pos[2]),
-            dist: (land.dist || 12.5) * fit,
-            height: (land.height || 5.4) * fit,
-            yaw: land.yaw ?? v.front,
-            offsetX: narrow ? 0 : -.2,
-            offsetY: narrow ? (collapsed ? .06 : .24) : 0,
-        };
-    };
 
     const states = new Map();
     let sizeKey = '';
@@ -66,7 +25,10 @@ export function createWorld(canvas, { mood, island, labels, models, onPick }) {
             states.clear();
         }
         const cacheKey = `${key}|${panelCollapsed}`;
-        if (!states.has(cacheKey)) states.set(cacheKey, computeState(key));
+        if (!states.has(cacheKey)) {
+            const c = cameraState(key, { width: w, height: h, collapsed: panelCollapsed });
+            states.set(cacheKey, { ...c, t: new THREE.Vector3(...c.target) });
+        }
         return states.get(cacheKey);
     };
 
