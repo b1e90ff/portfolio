@@ -402,6 +402,19 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn home_structured_data_lists_skills_from_every_group() {
+        let (_, body) = get(test_app(), "/en-US").await;
+        let person = body
+            .match_indices(r#""knowsAbout":["#)
+            .map(|(start, _)| &body[start..start + body[start..].find(']').unwrap()])
+            .find(|list| list.contains(r#""Java""#))
+            .expect("person knowsAbout lists skills");
+        for skill in ["Cloud Armor", "OpenTelemetry"] {
+            assert!(person.contains(&format!(r#""{skill}""#)), "{skill}");
+        }
+    }
+
+    #[tokio::test]
     async fn project_detail_opens_modal_over_project_list() {
         let (status, body) = get(test_app(), "/en-US/projects/portfolio").await;
         assert_eq!(status, StatusCode::OK);

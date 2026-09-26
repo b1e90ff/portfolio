@@ -63,7 +63,7 @@
       { "name": "Languages", "skills": ["Java", "Rust", "Python", "JavaScript"] },
       { "name": "Frameworks & testing", "skills": ["Spring Boot", "Spring", "Hibernate", "Flyway", "Axum", "Node.js", "Angular", "OpenAPI", "JUnit", "Mockito", "Playwright"] },
       { "name": "Platform & CI/CD", "skills": ["Kubernetes", "Helm", "Docker", "Istio", "GitHub Actions", "GitLab CI/CD", "Jenkins", "Ansible", "Terraform", "Bash", "Gradle", "Maven", "SonarQube", "Git"] },
-      { "name": "Cloud & infrastructure", "skills": ["Google Cloud", "AWS", "Hetzner", "Cloudflare", "DigitalOcean", "Proxmox", "Rancher", "Nginx", "HAProxy", "pfSense", "Tomcat"] },
+      { "name": "Cloud & infrastructure", "skills": ["AWS", "Hetzner", "Cloudflare", "DigitalOcean", "Proxmox", "Rancher", "Nginx", "HAProxy", "pfSense", "Tomcat"] },
       { "name": "Google Cloud", "skills": ["GKE", "Compute Engine", "Cloud Run", "Cloud Functions", "Cloud Load Balancing", "Cloud Armor", "Cloud CDN", "Cloud DNS", "Cloud NAT", "VPC", "Private Service Connect", "IAM", "Workload Identity Federation", "Secret Manager", "Cloud KMS", "Certificate Manager", "Security Command Center", "Cloud SQL", "Memorystore", "Cloud Storage", "BigQuery", "Artifact Registry", "Cloud Monitoring", "Cloud Logging", "Cloud Trace", "Error Reporting", "Config Connector", "Deployment Manager"] },
       { "name": "Data & messaging", "skills": ["SQL", "PostgreSQL", "MariaDB", "MySQL", "MongoDB", "Redis", "Kafka", "RabbitMQ", "Solr", "InfluxDB", "SQLite"] },
       { "name": "Observability", "skills": ["Prometheus", "Grafana", "OpenTelemetry"] }
@@ -78,7 +78,7 @@
       { "title": "Backend Developer", "company": "Freelancer", "period": "2015 - 2022", "description": "Design and development of backend applications and infrastructure for various clients – including automation, maintenance and operations." }
     ],
     "heading": "Stack & roles",
-    "description": "Roles as a backend developer and platform engineer – from freelance projects to the platform behind Eventfrog AG.",
+    "description": "Tech stack and roles as a backend developer and platform engineer – from freelance projects to the platform behind Eventfrog AG.",
     "rolesTitle": "Roles"
   },
   "projects": {

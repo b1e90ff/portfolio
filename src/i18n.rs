@@ -469,6 +469,8 @@ pub struct IslandCopy {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use super::*;
 
     #[test]
@@ -491,16 +493,13 @@ mod tests {
     fn skills_flatten_in_category_order() {
         let i18n = I18n::load(&["en-US".to_string()], "en-US").unwrap();
         let skills = &i18n.get("en-US").skills;
+        assert!(!skills.categories.is_empty());
+        assert!(skills.categories.iter().all(|c| !c.skills.is_empty()));
         let flat = skills.flattened();
-        assert_eq!(
-            flat.len(),
-            skills
-                .categories
-                .iter()
-                .map(|c| c.skills.len())
-                .sum::<usize>()
-        );
-        assert_eq!(flat.first(), skills.categories[0].skills.first());
+        let unique: HashSet<&String> = flat.iter().collect();
+        assert_eq!(unique.len(), flat.len(), "a skill appears in two groups");
+        let last = skills.categories.last().and_then(|c| c.skills.last());
+        assert_eq!(flat.last(), last);
     }
 
     #[test]

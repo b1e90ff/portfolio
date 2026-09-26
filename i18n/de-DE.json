@@ -63,7 +63,7 @@
       { "name": "Sprachen", "skills": ["Java", "Rust", "Python", "JavaScript"] },
       { "name": "Frameworks & Testing", "skills": ["Spring Boot", "Spring", "Hibernate", "Flyway", "Axum", "Node.js", "Angular", "OpenAPI", "JUnit", "Mockito", "Playwright"] },
       { "name": "Plattform & CI/CD", "skills": ["Kubernetes", "Helm", "Docker", "Istio", "GitHub Actions", "GitLab CI/CD", "Jenkins", "Ansible", "Terraform", "Bash", "Gradle", "Maven", "SonarQube", "Git"] },
-      { "name": "Cloud & Infrastruktur", "skills": ["Google Cloud", "AWS", "Hetzner", "Cloudflare", "DigitalOcean", "Proxmox", "Rancher", "Nginx", "HAProxy", "pfSense", "Tomcat"] },
+      { "name": "Cloud & Infrastruktur", "skills": ["AWS", "Hetzner", "Cloudflare", "DigitalOcean", "Proxmox", "Rancher", "Nginx", "HAProxy", "pfSense", "Tomcat"] },
       { "name": "Google Cloud", "skills": ["GKE", "Compute Engine", "Cloud Run", "Cloud Functions", "Cloud Load Balancing", "Cloud Armor", "Cloud CDN", "Cloud DNS", "Cloud NAT", "VPC", "Private Service Connect", "IAM", "Workload Identity Federation", "Secret Manager", "Cloud KMS", "Certificate Manager", "Security Command Center", "Cloud SQL", "Memorystore", "Cloud Storage", "BigQuery", "Artifact Registry", "Cloud Monitoring", "Cloud Logging", "Cloud Trace", "Error Reporting", "Config Connector", "Deployment Manager"] },
       { "name": "Daten & Messaging", "skills": ["SQL", "PostgreSQL", "MariaDB", "MySQL", "MongoDB", "Redis", "Kafka", "RabbitMQ", "Solr", "InfluxDB", "SQLite"] },
       { "name": "Observability", "skills": ["Prometheus", "Grafana", "OpenTelemetry"] }
@@ -78,7 +78,7 @@
       { "title": "Backend-Entwickler", "company": "Freelancer", "period": "2015 - 2022", "description": "Konzeption und Entwicklung von Backend-Anwendungen und Infrastruktur für verschiedene Kunden – inklusive Automatisierung, Wartung und Betrieb." }
     ],
     "heading": "Stack & Stationen",
-    "description": "Stationen als Backend Developer und Platform Engineer – von Freelance-Projekten bis zur Plattform der Eventfrog AG.",
+    "description": "Tech-Stack und Stationen als Backend Developer und Platform Engineer – von Freelance-Projekten bis zur Plattform der Eventfrog AG.",
     "rolesTitle": "Stationen"
   },
   "projects": {
