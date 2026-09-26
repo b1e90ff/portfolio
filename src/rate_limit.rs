@@ -1,13 +1,15 @@
 use std::net::{IpAddr, Ipv6Addr};
 use std::num::NonZeroU32;
+use std::sync::Arc;
 use std::time::Duration;
 
 use governor::clock::{Clock, DefaultClock};
 use governor::middleware::NoOpMiddleware;
 use governor::state::keyed::DashMapStateStore;
 use governor::{Quota, RateLimiter as KeyedLimiter};
+use tokio::time::{MissedTickBehavior, interval};
 
-const MAX_TRACKED_CLIENTS: usize = 4096;
+pub const HOUSEKEEPING_INTERVAL: Duration = Duration::from_secs(60);
 
 #[derive(Clone, Copy, Debug)]
 pub struct RateLimitConfig {
@@ -47,12 +49,30 @@ impl<C: Clock> RateLimiter<C> {
     }
 
     pub fn check(&self, ip: IpAddr) -> bool {
-        if self.inner.len() > MAX_TRACKED_CLIENTS {
-            self.inner.retain_recent();
-            self.inner.shrink_to_fit();
-        }
         self.inner.check_key(&client_key(ip)).is_ok()
     }
+
+    /// Drops clients whose quota has fully replenished and releases the freed capacity.
+    pub fn housekeeping(&self) {
+        self.inner.retain_recent();
+        self.inner.shrink_to_fit();
+    }
+
+    #[cfg(test)]
+    fn tracked_clients(&self) -> usize {
+        self.inner.len()
+    }
+}
+
+pub fn spawn_housekeeping(limiter: Arc<RateLimiter>, every: Duration) {
+    tokio::spawn(async move {
+        let mut ticker = interval(every);
+        ticker.set_missed_tick_behavior(MissedTickBehavior::Delay);
+        loop {
+            ticker.tick().await;
+            limiter.housekeeping();
+        }
+    });
 }
 
 /// IPv6 clients are keyed by their /64, which a single subscriber usually controls.
@@ -140,6 +160,22 @@ mod tests {
         let mapped: IpAddr = "::ffff:192.0.2.7".parse().unwrap();
         assert!(rl.check(v4));
         assert!(!rl.check(mapped));
+    }
+
+    #[test]
+    fn housekeeping_forgets_fully_replenished_clients() {
+        let (rl, clock) = limiter(2, 60);
+        let idle = IpAddr::V4(Ipv4Addr::new(10, 0, 0, 1));
+        let busy = IpAddr::V4(Ipv4Addr::new(10, 0, 0, 2));
+        assert!(rl.check(idle));
+        clock.advance(Duration::from_secs(90));
+        assert!(rl.check(busy));
+        assert_eq!(rl.tracked_clients(), 2);
+
+        rl.housekeeping();
+        assert_eq!(rl.tracked_clients(), 1);
+        assert!(rl.check(busy));
+        assert!(!rl.check(busy));
     }
 
     #[test]

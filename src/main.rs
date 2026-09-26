@@ -30,6 +30,10 @@ async fn main() -> Result<()> {
     info!(locales = ?i18n.locales(), default = i18n.default_locale(), "translations loaded");
 
     let state = state::AppState::new(settings.clone(), i18n);
+    rate_limit::spawn_housekeeping(
+        state.contact_rate_limit.clone(),
+        rate_limit::HOUSEKEEPING_INTERVAL,
+    );
     let router = app::router(state);
 
     let addr: SocketAddr = settings.bind.parse().context("invalid PORTFOLIO_BIND")?;
