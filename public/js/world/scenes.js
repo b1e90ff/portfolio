@@ -69,9 +69,10 @@ export function basecamp(ctx, o) {
     P.tufts(ctx, g, T, 16, 1.6, (x, z) => onPlateau(x, z)
         || Math.abs(angDiff(Math.atan2(z, x), BAY)) < .35
         || Math.hypot(x + .3, z - 1.9) < 1.1
-        || Math.hypot(x - fx, z - fz) < .7
+        || Math.hypot(x - fx, z - fz) < 1.35
         || nearShed(x, z));
-    P.tufts(ctx, g, U, 7, .9);
+    const plateauProps = [[-1.25, -1.35, .95], [.2, -2.1, .5], [-.2, -.35, .25]];
+    P.tufts(ctx, g, U, 7, .9, (x, z) => plateauProps.some(([px, pz, r]) => Math.hypot(x - px, z - pz) < r));
     for (const [x, z, ry] of [[-.6, -.45, .3], [0, -.2, .6]]) ctx.place('nature/path_stone', x, U.top + .005, z, ry, 1, g);
     for (const [x, z, ry] of [[-1.3, 1.1, .5], [-.4, 1.2, .1], [.4, 1.25, -.2]]) ctx.place('nature/path_stone', x, T.top + .005, z, ry, 1, g);
 
@@ -103,13 +104,14 @@ export function mini(ctx, o) {
     const [L, U] = isl.levels;
     g.rotation.y = o.front;
     const occ = reserver(g);
+    const clear = [];
+    g.userData.keepClear = (x, z, r) => clear.push({ x, z, r });
     const blocked = (pad) => (x, z) => occ.some((c) => Math.hypot(x - c.x, z - c.z) < c.r + pad);
     if (U) occ.push({ x: U.c.x, z: U.c.z, r: U.fn(0) });
     MOTIFS[o.motif](ctx, g, { y: L.top, yu: U?.top, level: L, labels: o.labels });
     P.cliffRocks(ctx, g, L, L.top, L.top, 16);
     if (U) {
         P.cliffRocks(ctx, g, U, U.top, U.top - L.top, 9, Math.PI / 2);
-        const clear = g.userData.clear || [];
         P.tufts(ctx, g, U, 4, .3, (x, z) => clear.some((c) => Math.hypot(x - c.x, z - c.z) < c.r));
     }
     P.tufts(ctx, g, L, 12, r * .55, blocked(.12));
@@ -134,7 +136,6 @@ const MOTIFS = {
         const R = g.userData.reserve;
         ctx.place('survival/workbench', 0, y, -.05, 0, 1.9, g);
         R(0, -.05, .55);
-        ctx.place('survival/tool-hammer', .1, y + .38, -.05, .4, 1.8, g);
         ctx.place('survival/box-large', -.8, y, .25, .3, 1.7, g);
         ctx.place('survival/box', -.78, y + .38, .28, .8, 1.5, g);
         R(-.8, .25, .35);
@@ -144,9 +145,13 @@ const MOTIFS = {
         R(.85, .45, .5);
         P.lantern(ctx, g, 1.05, y, -.25);
         if (yu) {
+            const C = g.userData.keepClear;
             ctx.place('survival/barrel', -.35, yu, -1.2, 0, 1.5, g);
+            C(-.35, -1.2, .25);
             ctx.place('survival/barrel', .05, yu, -1.35, 0, 1.4, g);
+            C(.05, -1.35, .25);
             ctx.place('survival/resource-planks', .3, yu, -.95, .5, 1.4, g);
+            C(.3, -.95, .35);
         }
     },
     about(ctx, g, { y, yu, level }) {
@@ -154,7 +159,7 @@ const MOTIFS = {
         if (yu) {
             ctx.place('survival/tent-canvas', -.1, yu, -1.3, 0, 2, g);
             P.sleepingHusky(ctx, g, -.12, yu, -1.02, -.45, .9);
-            g.userData.clear = [{ x: -.1, z: -1.1, r: .5 }];
+            g.userData.keepClear(-.1, -1.1, .5);
         }
         P.campfire(ctx, g, -.75, y, .15);
         R(-.75, .15, .45);
@@ -176,7 +181,10 @@ const MOTIFS = {
         P.lantern(ctx, g, -.75, y, -.5);
         R(.8, -.55, .25);
         ctx.place('nature/statue_obelisk', .8, y, -.55, .4, .9, g);
-        if (yu) ctx.place('survival/signpost-single', -.2, yu, -.9, .3, 1.6, g);
+        if (yu) {
+            ctx.place('survival/signpost-single', -.2, yu, -.9, .3, 1.6, g);
+            g.userData.keepClear(-.2, -.9, .2);
+        }
     },
     contact(ctx, g, { y, yu }) {
         const R = g.userData.reserve;
@@ -190,6 +198,9 @@ const MOTIFS = {
         for (const [i, n] of ['nature/flower_redA', 'nature/flower_yellowB', 'nature/flower_purpleB'].entries()) {
             ctx.place(n, -.3 + hash(i, 4, 2) * .6, y, .5 + hash(i, 9, 5) * .3, hash(i, 1, 7) * 6, 1.3, g);
         }
-        if (yu) ctx.place('survival/bucket', -.1, yu, -.85, 0, 1.6, g);
+        if (yu) {
+            ctx.place('survival/bucket', -.1, yu, -.85, 0, 1.6, g);
+            g.userData.keepClear(-.1, -.85, .2);
+        }
     },
 };
