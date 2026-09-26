@@ -21,8 +21,9 @@ export function golden(ctx, parent, x, y, z, ry = 0, s = 1) {
     ctx.add(new THREE.BoxGeometry(.24, .22, .24), fur, 0, 0, 0, head);
     ctx.add(new THREE.BoxGeometry(.13, .1, .14), furLight, .16, -.04, 0, head);
     ctx.add(new THREE.BoxGeometry(.04, .04, .06), dark, .23, 0, 0, head);
+    const ear = ctx.flat('#c08a32');
     for (const side of [-1, 1]) {
-        ctx.add(new THREE.BoxGeometry(.1, .16, .04), ctx.flat('#c08a32'), -.02, -.05, side * .14, head).rotation.x = side * .25;
+        ctx.add(new THREE.BoxGeometry(.1, .16, .04), ear, -.02, -.05, side * .14, head).rotation.x = side * .25;
         ctx.add(new THREE.BoxGeometry(.012, .035, .035), dark, .121, .05, side * .065, head);
     }
     const legs = [[.2, -.1], [.2, .1], [-.22, -.1], [-.22, .1]].map(([lx, lz]) => {
@@ -41,7 +42,6 @@ export function golden(ctx, parent, x, y, z, ry = 0, s = 1) {
     return g;
 }
 
-/* Cardea: a small, fox-like husky mix with one blue and one brown eye. */
 export function husky(ctx, parent, x, y, z, ry = 0, s = 1) {
     const g = new THREE.Group();
     g.position.set(x, y, z);
@@ -237,7 +237,7 @@ function steer(a, target, dt, others = [], arrive = .35) {
     return { d, speed: speed / a.base };
 }
 
-/* Smooth random roaming: the travel direction drifts randomly and turns back inside near the edge. */
+/* Direction drifts randomly and bends toward open ground near edges, so paths stay smooth. */
 function roam(a, out, dt, jitter = 2.5) {
     a.wander += (Math.random() - .5) * jitter * dt * 2;
     const dx = Math.cos(a.wander);
@@ -260,7 +260,7 @@ function roam(a, out, dt, jitter = 2.5) {
 
 const PLAY_NEXT = [['bow', .5], ['circle', .2], ['sniff', .18], ['rest', .12]];
 
-/* Play loop: a play bow starts a chase, a catch swaps roles; circling, sniffing and rests in between. */
+/* A play bow opens a chase and a catch swaps roles; circling, sniffing and rests fill gaps. */
 export function playTogether(ctx, walk, specs, y) {
     const agents = specs.map(([dog, o]) => agent(dog, walk, { ...o, y }));
     const targets = agents.map(() => new THREE.Vector3());

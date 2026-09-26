@@ -86,7 +86,7 @@ function swapMain(doc) {
     main.dataset.island = next.dataset.island;
     document.body.dataset.island = next.dataset.island;
     initContent();
-    const opener = hadModal && !main.querySelector('[data-modal]') && modalOpener && main.querySelector(`a[href="${modalOpener}"]`);
+    const opener = hadModal && !main.querySelector('[data-modal]') && modalOpener && main.querySelector(`a[href="${CSS.escape(modalOpener)}"]`);
     if (!main.querySelector('[data-modal]')) modalOpener = null;
     const focusTarget = opener || main.querySelector('#modal-title, #panel-title[tabindex], .intro h1');
     focusTarget?.focus({ preventScroll: true });

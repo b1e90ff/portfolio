@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 
-/* Small blimp that circles the archipelago on a slow, gently rising and falling loop. */
 export function airship(ctx, { radius, height, speed }) {
     const ship = new THREE.Group();
     ctx.world.add(ship);

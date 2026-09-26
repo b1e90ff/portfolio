@@ -1,4 +1,4 @@
-import { angDiff, at, hash, island, radiusFn } from './engine.js';
+import { angDiff, at, hash, island } from './engine.js';
 import * as P from './props.js';
 
 const BAY = 1.05;
@@ -28,7 +28,7 @@ export function basecamp(ctx, o) {
 
     const [sx, sz] = at(U.fn, U.c, FALL, -.02);
     const [ex, ez] = at(T.fn, T.c, BAY, -.05);
-    const [ux, uz] = at(U.fn, U.c, FALL, -.06);
+    const [ux, uz] = at(U.fn, U.c, FALL, .02);
     const [lx, lz] = at(T.fn, T.c, BAY, -.1);
     // The spring leaves the cliff face below the plateau rim; its flat head hides inside the rock.
     P.waterfall(ctx, g, ux, uz, U.top - .38, T.top + .02, FALL, .42, .25, { arc: .16, foam: true });
@@ -97,7 +97,7 @@ export function mini(ctx, o) {
     const occ = reserver(g);
     const blocked = (pad) => (x, z) => occ.some((c) => Math.hypot(x - c.x, z - c.z) < c.r + pad);
     if (U) occ.push({ x: U.c.x, z: U.c.z, r: U.fn(0) });
-    MOTIFS[o.motif](ctx, g, { y: L.top, yu: U?.top, r, seed: o.seed, labels: o.labels });
+    MOTIFS[o.motif](ctx, g, { y: L.top, yu: U?.top, level: L, labels: o.labels });
     P.cliffRocks(ctx, g, L, L.top, L.top, 16);
     if (U) {
         P.cliffRocks(ctx, g, U, U.top, U.top - L.top, 9, Math.PI / 2);
@@ -141,7 +141,7 @@ const MOTIFS = {
             ctx.place('survival/resource-planks', .3, yu, -.95, .5, 1.4, g);
         }
     },
-    about(ctx, g, { y, yu, r, seed }) {
+    about(ctx, g, { y, yu, level }) {
         const R = g.userData.reserve;
         if (yu) {
             ctx.place('survival/tent-canvas', -.1, yu, -1.3, 0, 2, g);
@@ -156,8 +156,7 @@ const MOTIFS = {
         }
         P.lantern(ctx, g, -1.55, y, -.45);
         const dog = P.golden(ctx, g, 1, y, .7, 2.6, .8);
-        const ground = { fn: radiusFn({ r0: r, amp: .12, seed }), c: { x: 0, z: 0 } };
-        P.playFetch(ctx, g, P.area(ground, g.userData.occ, { margin: .5, zone: { x: .5, z: .75, r: 1.6 } }), dog, y);
+        P.playFetch(ctx, g, P.area(level, g.userData.occ, { margin: .5, zone: { x: .5, z: .75, r: 1.6 } }), dog, y);
     },
     experience(ctx, g, { y, yu, labels }) {
         const R = g.userData.reserve;

@@ -84,7 +84,6 @@ export function shed(ctx, parent, x, y, z, ry = 0) {
     }
     ctx.add(new THREE.BoxGeometry(.4, .05, .02), ctx.flat('#11141a'), .2, .45, .385, s);
     ctx.add(new THREE.BoxGeometry(.4, .05, .02), ctx.flat('#11141a'), .2, .38, .385, s);
-    ctx.glowSpot(.2, .6, .7, 0x8fe0a8, .8, 1.6, s);
     return s;
 }
 
@@ -92,7 +91,11 @@ export function lantern(ctx, parent, x, y, z) {
     parent.userData.reserve?.(x, z, .16);
     ctx.place('town/lantern', x, y, z, 0, .8, parent);
     ctx.add(new THREE.SphereGeometry(.07, 8, 6), ctx.emissive('#ffc46b', 3), x, y + 1.18, z, parent);
-    ctx.glowSpot(x, y + 1.1, z, 0xffb35a, 2, 3.4, parent);
+    // A glow sprite instead of a point light: every light costs every lit fragment on mobile GPUs.
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: fireKit(ctx).glow, depthWrite: false, blending: THREE.AdditiveBlending }));
+    halo.position.set(x, y + 1.18, z);
+    halo.scale.setScalar(.7);
+    parent.add(halo);
 }
 
 export function signpost(ctx, parent, x, y, z, labels, ry = 0) {
@@ -163,7 +166,7 @@ export function pier(ctx, parent, x, y, z, n = 3) {
     return p;
 }
 
-/* Arched plank bridge whose deck follows the same height profile the dogs walk on. */
+/* The deck follows bridge.height, the same profile walk areas use to lift the dogs. */
 export function woodBridge(ctx, parent, bridge, y) {
     const b = new THREE.Group();
     b.position.set(bridge.x, y, bridge.z);
@@ -223,25 +226,21 @@ export function campfire(ctx, parent, x, y, z) {
         [0, 0, .11, .4, '#e8430f'], [.06, .03, .075, .28, '#f2621a'], [-.06, -.02, .075, .3, '#f2621a'],
         [.02, -.06, .06, .26, '#f7881f'], [0, 0, .055, .26, '#ffb52e'], [0, 0, .03, .16, '#ffe08a'],
     ].map(([fx, fz, rad, h, color], i) => {
-        const geo = new THREE.OctahedronGeometry(1, 0);
-        geo.translate(0, 1, 0);
         // Flames skip tone mapping so the orange stays saturated instead of washing out to white.
-        const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color, toneMapped: false }));
+        const m = new THREE.Mesh(fireKit(ctx).flame, new THREE.MeshBasicMaterial({ color, toneMapped: false }));
         m.position.set(fx, .05, fz);
         m.userData = { rad, h, phase: i * 1.7, rate: .009 + i * .0017 };
         f.add(m);
         return m;
     });
     const glow = new THREE.Mesh(new THREE.CircleGeometry(.55, 24), new THREE.MeshBasicMaterial({
-        map: glowTexture(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+        map: fireKit(ctx).glow, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     }));
     glow.rotation.x = -Math.PI / 2;
     glow.position.y = .01;
     f.add(glow);
-    const sparkMat = new THREE.MeshBasicMaterial({ color: '#ffb347', toneMapped: false });
     const sparks = Array.from({ length: 8 }, (_, i) => {
-        const spark = new THREE.Mesh(new THREE.BoxGeometry(.018, .018, .018), sparkMat.clone());
-        spark.material.transparent = true;
+        const spark = new THREE.Mesh(fireKit(ctx).spark, new THREE.MeshBasicMaterial({ color: '#ffb347', toneMapped: false, transparent: true }));
         spark.userData = { offset: hash(i, 4, 9), drift: (hash(i, 2, 7) - .5) * .18, turn: hash(i, 8, 1) * 6 };
         f.add(spark);
         return spark;
@@ -254,7 +253,7 @@ export function campfire(ctx, parent, x, y, z) {
             const u = m.userData;
             const k = calm ? 1 : .8 + .2 * Math.sin(t * u.rate + u.phase) + .08 * Math.sin(t * u.rate * 2.3 + u.phase);
             m.scale.set(u.rad * (1.1 - k * .1), u.h / 2 * k, u.rad * (1.1 - k * .1));
-            m.rotation.set(calm ? 0 : Math.sin(t * .003 + u.phase) * .12, t * .0015 + u.phase, 0);
+            m.rotation.set(calm ? 0 : Math.sin(t * .003 + u.phase) * .12, calm ? u.phase : t * .0015 + u.phase, 0);
         });
         sparks.forEach((spark) => {
             const u = spark.userData;
@@ -269,6 +268,15 @@ export function campfire(ctx, parent, x, y, z) {
         glow.material.opacity = .55 + .25 * flicker;
     });
     return f;
+}
+
+function fireKit(ctx) {
+    if (!ctx.fireKit) {
+        const flame = new THREE.OctahedronGeometry(1, 0);
+        flame.translate(0, 1, 0);
+        ctx.fireKit = { flame, spark: new THREE.BoxGeometry(.018, .018, .018), glow: glowTexture() };
+    }
+    return ctx.fireKit;
 }
 
 function glowTexture() {

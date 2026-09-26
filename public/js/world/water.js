@@ -32,26 +32,35 @@ function fadeTexture(fadeFrom) {
     return new THREE.CanvasTexture(c);
 }
 
-/* One continuous sheet: flat over the lip, a rounded bend at the edge, then a slightly bulging drop. */
-function fallSheet(w, spill, bend, drop, arc, wTop = w) {
+/* One sheet with no seams: flat over the lip, a rounded bend at the edge, then the drop. */
+export function fallSheet(w, spill, bend, drop, arc, wTop = w) {
     const bendLen = bend * Math.PI / 2;
     const total = spill + bendLen + drop;
-    const at = (u) => {
+    const pointAt = (u) => {
         if (u <= spill) return [.02, u - spill];
         if (u <= spill + bendLen) {
             const th = (u - spill) / bend;
             return [.02 - bend * (1 - Math.cos(th)), bend * Math.sin(th)];
         }
         const d = u - spill - bendLen;
-        return [.02 - bend - d, bend + arc * Math.sqrt(d / drop)];
+        return [.02 - bend - d, bend + arc * Math.sin(d / drop * Math.PI / 2)];
     };
-    const rows = 26;
+    // Each section gets its own rows so the short bend stays smooth on tall falls.
+    const stations = [];
+    const section = (from, length, count) => {
+        for (let i = 0; i < count; i++) stations.push(from + length * i / count);
+    };
+    section(0, spill, 2);
+    section(spill, bendLen, 8);
+    section(spill + bendLen, drop, 18);
+    stations.push(total);
+    const rows = stations.length - 1;
     const positions = [];
     const uvs = [];
     const index = [];
     for (let i = 0; i <= rows; i++) {
-        const u = i / rows * total;
-        const [y, z] = at(u);
+        const u = stations[i];
+        const [y, z] = pointAt(u);
         const k = Math.min(1, Math.max(0, (u - spill) / (bendLen + drop * .3)));
         const half = (wTop + (w - wTop) * k * k * (3 - 2 * k)) / 2;
         positions.push(-half, y, z, half, y, z);
@@ -123,7 +132,6 @@ export function waterfall(ctx, parent, x, z, top, bottom, a, w = .6, spill = 0, 
     return group;
 }
 
-/* Flat stream whose streaks flow from start to end, matching the waterfalls it connects. */
 export function stream(ctx, parent, sx, sz, ex, ez, y, width) {
     const len = Math.hypot(ex - sx, ez - sz);
     const tex = streakTexture('#7fbfe4', 22, 8);
