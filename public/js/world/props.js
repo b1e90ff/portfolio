@@ -644,6 +644,7 @@ export function playFetch(ctx, parent, walk, dog, y) {
             a.dog.userData.head.localToWorld(mouth.set(.2, -.07, 0));
             parent.worldToLocal(mouth);
             b.p.set(mouth.x, 0, mouth.z);
+            walk.resolve(b.p, R);
             b.h = mouth.y - y;
             b.v.set(0, 0, 0);
             b.vh = 0;
