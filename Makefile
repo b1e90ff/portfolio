@@ -59,4 +59,4 @@ audit:
 
 clean:
 	cargo clean
-	rm -rf $(CSS_OUT) bin/tailwindcss
+	rm -rf $(CSS_OUT) bin/tailwindcss*
