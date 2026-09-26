@@ -31,7 +31,7 @@ export function basecamp(ctx, o) {
     const [ux, uz] = at(U.fn, U.c, FALL, -.22);
     const [lx, lz] = at(T.fn, T.c, BAY, -.38);
     P.waterfall(ctx, g, ux, uz, U.top - .02, T.top + .02, FALL, .5, .2, { arc: .12, foam: true });
-    P.waterfall(ctx, g, lx, lz, T.top + .02, -3.4, BAY, .62, .33, { arc: .3, mist: true });
+    P.waterfall(ctx, g, lx, lz, T.top + .02, -3.4, BAY, .62, .33, { arc: .3, mist: true, topWidth: .5 });
     const len = Math.hypot(ex - sx, ez - sz);
     P.stream(ctx, g, sx, sz, ex, ez, T.top + .01, .5);
     // The stream blocks the dogs except for a gap at its midpoint where the bridge crosses.

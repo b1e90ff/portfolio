@@ -843,20 +843,44 @@ function fadeTexture(fadeFrom) {
     return new THREE.CanvasTexture(c);
 }
 
-/* Sheet that bulges outward below the lip, like water leaving the edge before it drops. */
-function fallSheet(w, h, arc) {
-    const geo = new THREE.PlaneGeometry(w, h, 1, 14);
-    const p = geo.attributes.position;
-    for (let i = 0; i < p.count; i++) {
-        const t = .5 - p.getY(i) / h;
-        p.setZ(i, arc * Math.sqrt(t) + p.getZ(i));
+/* One continuous sheet: flat over the lip, a rounded bend at the edge, then a slightly bulging drop. */
+function fallSheet(w, spill, bend, drop, arc, wTop = w) {
+    const bendLen = bend * Math.PI / 2;
+    const total = spill + bendLen + drop;
+    const at = (u) => {
+        if (u <= spill) return [.02, u - spill];
+        if (u <= spill + bendLen) {
+            const th = (u - spill) / bend;
+            return [.02 - bend * (1 - Math.cos(th)), bend * Math.sin(th)];
+        }
+        const d = u - spill - bendLen;
+        return [.02 - bend - d, bend + arc * Math.sqrt(d / drop)];
+    };
+    const rows = 26;
+    const positions = [];
+    const uvs = [];
+    const index = [];
+    for (let i = 0; i <= rows; i++) {
+        const u = i / rows * total;
+        const [y, z] = at(u);
+        const k = Math.min(1, Math.max(0, (u - spill) / (bendLen + drop * .3)));
+        const half = (wTop + (w - wTop) * k * k * (3 - 2 * k)) / 2;
+        positions.push(-half, y, z, half, y, z);
+        uvs.push(0, 1 - u / total, 1, 1 - u / total);
+        if (i < rows) index.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
     }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    geo.setIndex(index);
     geo.computeVertexNormals();
     return geo;
 }
 
 export function waterfall(ctx, parent, x, z, top, bottom, a, w = .6, spill = 0, o = {}) {
     const h = top - bottom;
+    const bend = .12;
+    const drop = h - bend;
     const arc = o.arc ?? Math.min(.35, h * .12);
     const fade = o.mist ? fadeTexture(.55) : null;
     const back = streakTexture('#5fa8d6', 40, 2);
@@ -867,19 +891,14 @@ export function waterfall(ctx, parent, x, z, top, bottom, a, w = .6, spill = 0, 
         map, alphaMap: fade, transparent: true, opacity, emissive, emissiveIntensity: .35, roughness: .2, side: THREE.DoubleSide, depthWrite: false,
     });
     const group = new THREE.Group();
-    group.position.set(x, (top + bottom) / 2, z);
+    group.position.set(x, top, z);
     group.rotation.y = Math.PI / 2 - a;
     parent.add(group);
-    group.add(new THREE.Mesh(fallSheet(w, h, arc), layer(back, .88, '#2c6f9a')));
-    const veil = new THREE.Mesh(fallSheet(w * .78, h, arc), layer(front, .55, '#4f9cc4'));
-    veil.position.z = .025;
+    const wTop = o.topWidth ?? w;
+    group.add(new THREE.Mesh(fallSheet(w, spill, bend, drop, arc, wTop), layer(back, .88, '#2c6f9a')));
+    const veil = new THREE.Mesh(fallSheet(w * .78, spill, bend, drop, arc, wTop * .78), layer(front, .55, '#4f9cc4'));
+    veil.position.set(0, .004, .025);
     group.add(veil);
-    if (spill > 0) {
-        const lip = new THREE.Mesh(new THREE.PlaneGeometry(spill, w), layer(back, .88, '#2c6f9a'));
-        lip.rotation.set(-Math.PI / 2, 0, -a);
-        lip.position.set(x - Math.cos(a) * spill / 2, top + .02, z - Math.sin(a) * spill / 2);
-        parent.add(lip);
-    }
     const foam = [];
     if (o.foam || o.mist) {
         const mat = ctx.flat('#f4fbff', { transparent: true, opacity: .85, depthWrite: false });
@@ -890,7 +909,8 @@ export function waterfall(ctx, parent, x, z, top, bottom, a, w = .6, spill = 0, 
             foam.push(puff);
         }
     }
-    const base = -h / 2;
+    const base = -h;
+    const edge = bend + arc;
     ctx.onFrame((t) => {
         if (!ctx.reduced) {
             back.offset.y = (t * .0009) % 1;
@@ -900,11 +920,11 @@ export function waterfall(ctx, parent, x, z, top, bottom, a, w = .6, spill = 0, 
             const k = ctx.reduced ? puff.userData.k : (t * .0005 + puff.userData.k) % 1;
             const u = puff.userData;
             if (o.mist) {
-                puff.position.set(u.x * (1 + k), base + h * .3 - k * h * .35, arc + .1 + k * .3);
+                puff.position.set(u.x * (1 + k), base + h * .3 - k * h * .35, edge + .1 + k * .3);
                 puff.scale.setScalar(.06 + k * .16);
                 puff.material.opacity = .6 * (1 - k);
             } else {
-                puff.position.set(u.x, base + k * .18, arc + .05 + k * .12);
+                puff.position.set(u.x, base + k * .18, edge + .05 + k * .12);
                 puff.scale.setScalar(.05 + Math.sin(k * Math.PI) * .07);
                 puff.material.opacity = .85 * (1 - k);
             }
