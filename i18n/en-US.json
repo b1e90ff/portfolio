@@ -60,12 +60,12 @@
   "skills": {
     "title": "Tech stack",
     "categories": [
-      { "name": "Languages", "skills": ["Java", "Rust", "Python", "JavaScript", "Bash", "SQL"] },
+      { "name": "Languages", "skills": ["Java", "Rust", "Python", "JavaScript"] },
       { "name": "Frameworks & testing", "skills": ["Spring Boot", "Spring", "Hibernate", "Flyway", "Axum", "Node.js", "Angular", "OpenAPI", "JUnit", "Mockito", "Playwright"] },
-      { "name": "Platform & CI/CD", "skills": ["Kubernetes", "Helm", "Docker", "Istio", "GitHub Actions", "GitLab CI/CD", "Jenkins", "Ansible", "Terraform", "Gradle", "Maven", "SonarQube", "Git"] },
+      { "name": "Platform & CI/CD", "skills": ["Kubernetes", "Helm", "Docker", "Istio", "GitHub Actions", "GitLab CI/CD", "Jenkins", "Ansible", "Terraform", "Bash", "Gradle", "Maven", "SonarQube", "Git"] },
       { "name": "Cloud & infrastructure", "skills": ["Google Cloud", "AWS", "Hetzner", "Cloudflare", "DigitalOcean", "Proxmox", "Rancher", "Nginx", "HAProxy", "pfSense", "Tomcat"] },
       { "name": "Google Cloud", "skills": ["GKE", "Compute Engine", "Cloud Run", "Cloud Functions", "Cloud Load Balancing", "Cloud Armor", "Cloud CDN", "Cloud DNS", "Cloud NAT", "VPC", "Private Service Connect", "IAM", "Workload Identity Federation", "Secret Manager", "Cloud KMS", "Certificate Manager", "Security Command Center", "Cloud SQL", "Memorystore", "Cloud Storage", "BigQuery", "Artifact Registry", "Cloud Monitoring", "Cloud Logging", "Cloud Trace", "Error Reporting", "Config Connector", "Deployment Manager"] },
-      { "name": "Data & messaging", "skills": ["PostgreSQL", "MariaDB", "MySQL", "MongoDB", "Redis", "Kafka", "RabbitMQ", "Solr", "InfluxDB", "SQLite"] },
+      { "name": "Data & messaging", "skills": ["SQL", "PostgreSQL", "MariaDB", "MySQL", "MongoDB", "Redis", "Kafka", "RabbitMQ", "Solr", "InfluxDB", "SQLite"] },
       { "name": "Observability", "skills": ["Prometheus", "Grafana", "OpenTelemetry"] }
     ],
     "more": "…and much more – the list grows with every project."
