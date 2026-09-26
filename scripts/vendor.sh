@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
-# Refreshes the third-party browser assets under public/vendor and assets/fonts from npm
-# tarballs verified against the integrity hashes pinned below.
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 THREE_VERSION="0.186.1"
 THREE_INTEGRITY="sha512-blFeqb49wRCSGUGj7gtpfnSGHy2lwDk94RhUmS1c/hTby70kvChbWpkJ4Pm1390LqzzvTmzgXKHPEafJwCb8jA=="

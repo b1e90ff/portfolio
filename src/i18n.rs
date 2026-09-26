@@ -414,6 +414,20 @@ pub struct Moods {
     pub day: String,
 }
 
+impl Moods {
+    pub fn label(&self, key: &str) -> Option<&str> {
+        let label = match key {
+            "dusk" => &self.dusk,
+            "night" => &self.night,
+            "aurora" => &self.aurora,
+            "peach" => &self.peach,
+            "day" => &self.day,
+            _ => return None,
+        };
+        Some(label)
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct Islands {
     pub basecamp: IslandCopy,

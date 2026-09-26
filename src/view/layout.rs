@@ -4,6 +4,7 @@ use std::sync::LazyLock;
 
 use maud::{DOCTYPE, Markup, PreEscaped, html};
 use serde_json::Value;
+use tracing::warn;
 
 use crate::i18n::{I18n, Messages};
 use crate::keywords;
@@ -176,7 +177,7 @@ pub fn stylesheet_href() -> &'static str {
     static HREF: LazyLock<String> = LazyLock::new(|| match fs::read(STYLESHEET) {
         Ok(bytes) => format!("/css/main.css?v={}", content_version(&bytes)),
         Err(err) => {
-            tracing::warn!(%err, path = STYLESHEET, "stylesheet unreadable, falling back to version query");
+            warn!(%err, path = STYLESHEET, "stylesheet unreadable, falling back to version query");
             asset("/css/main.css")
         }
     });

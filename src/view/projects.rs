@@ -61,7 +61,7 @@ pub fn list_extra_schemas(state: &AppState, locale: &str, m: &Messages) -> Vec<V
         schema::web_page(
             state,
             locale,
-            "/projects",
+            Island::Projects.path(),
             &m.projects.title,
             &m.projects.description,
             "CollectionPage",
@@ -72,7 +72,7 @@ pub fn list_extra_schemas(state: &AppState, locale: &str, m: &Messages) -> Vec<V
             locale,
             &[
                 (m.navigation.home.as_str(), ""),
-                (m.projects.title.as_str(), "/projects"),
+                (m.projects.title.as_str(), Island::Projects.path()),
             ],
         ),
         item_list,
@@ -121,7 +121,7 @@ pub fn detail_extra_schemas(
             locale,
             &[
                 (m.navigation.home.as_str(), ""),
-                (m.projects.title.as_str(), "/projects"),
+                (m.projects.title.as_str(), Island::Projects.path()),
                 (project.title.as_str(), &format!("/projects/{}", project.id)),
             ],
         ),

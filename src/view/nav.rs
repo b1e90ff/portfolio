@@ -27,14 +27,9 @@ pub fn topbar(state: &AppState, locale: &str, path: &str, m: &Messages) -> Marku
 }
 
 fn moods(m: &Messages) -> Markup {
-    let names = &m.world.moods;
-    let labelled = [
-        (MOODS[0], &names.dusk),
-        (MOODS[1], &names.night),
-        (MOODS[2], &names.aurora),
-        (MOODS[3], &names.peach),
-        (MOODS[4], &names.day),
-    ];
+    let labelled = MOODS
+        .iter()
+        .filter_map(|key| m.world.moods.label(key).map(|name| (*key, name)));
     html! {
         div class="moods glass" role="group" aria-label=(m.world.mood_label) {
             span class="moods-label" aria-hidden="true" { (m.world.mood_label) }
@@ -95,6 +90,24 @@ pub fn pins(locale: &str, m: &Messages) -> Markup {
                     span class="pin-stem" {}
                     span class="pin-dot" {}
                 }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::i18n::I18n;
+
+    #[test]
+    fn every_mood_has_a_label_in_every_locale() {
+        let locales = ["en-US".to_string(), "de-DE".to_string()];
+        let i18n = I18n::load(&locales, "en-US").unwrap();
+        for locale in &locales {
+            let m = i18n.get(locale);
+            for key in MOODS {
+                assert!(m.world.moods.label(key).is_some(), "{locale} {key}");
             }
         }
     }

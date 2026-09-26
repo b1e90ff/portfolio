@@ -33,7 +33,7 @@ pub fn extra_schemas(state: &AppState, locale: &str, m: &Messages) -> Vec<Value>
         schema::web_page(
             state,
             locale,
-            "/contact",
+            Island::Contact.path(),
             &m.contact.title,
             &m.contact.description,
             "ContactPage",
@@ -44,7 +44,7 @@ pub fn extra_schemas(state: &AppState, locale: &str, m: &Messages) -> Vec<Value>
             locale,
             &[
                 (m.navigation.home.as_str(), ""),
-                (m.contact.title.as_str(), "/contact"),
+                (m.contact.title.as_str(), Island::Contact.path()),
             ],
         ),
     ]

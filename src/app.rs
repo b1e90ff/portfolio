@@ -15,6 +15,7 @@ use tracing::Level;
 
 use crate::routes::{api, pages, seo};
 use crate::state::AppState;
+use crate::view::world::Island;
 
 pub fn router(state: AppState) -> Router {
     let client_ip_source = state.settings.client_ip_source.clone();
@@ -35,15 +36,24 @@ pub fn router(state: AppState) -> Router {
         let prefix = format!("/{locale}");
         pages_router = pages_router
             .route(&prefix, get(pages::home))
-            .route(&format!("{prefix}/basecamp"), get(pages::basecamp))
-            .route(&format!("{prefix}/about"), get(pages::about))
-            .route(&format!("{prefix}/experience"), get(pages::experience))
-            .route(&format!("{prefix}/projects"), get(pages::projects_list))
+            .route(
+                &island_route(&prefix, Island::Basecamp),
+                get(pages::basecamp),
+            )
+            .route(&island_route(&prefix, Island::About), get(pages::about))
+            .route(
+                &island_route(&prefix, Island::Experience),
+                get(pages::experience),
+            )
+            .route(
+                &island_route(&prefix, Island::Projects),
+                get(pages::projects_list),
+            )
             .route(
                 &format!("{prefix}/projects/{{id}}"),
                 get(pages::project_detail),
             )
-            .route(&format!("{prefix}/contact"), get(pages::contact))
+            .route(&island_route(&prefix, Island::Contact), get(pages::contact))
             .route(
                 &format!("{prefix}/opengraph-image"),
                 get(seo::opengraph_image),
@@ -119,6 +129,10 @@ pub fn router(state: AppState) -> Router {
         .layer(PropagateRequestIdLayer::x_request_id())
         .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
         .layer(TraceLayer::new_for_http().make_span_with(DefaultMakeSpan::new().level(Level::INFO)))
+}
+
+fn island_route(prefix: &str, island: Island) -> String {
+    format!("{prefix}{}", island.path())
 }
 
 fn serve_dir(path: &str) -> ServeDir {

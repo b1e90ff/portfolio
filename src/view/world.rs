@@ -36,7 +36,7 @@ impl Island {
         }
     }
 
-    pub fn path(self) -> &'static str {
+    pub const fn path(self) -> &'static str {
         match self {
             Island::Overview => "",
             Island::Basecamp => "/basecamp",
