@@ -10,7 +10,8 @@ use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetReques
 use tower_http::services::ServeDir;
 use tower_http::set_header::SetResponseHeaderLayer;
 use tower_http::timeout::TimeoutLayer;
-use tower_http::trace::TraceLayer;
+use tower_http::trace::{DefaultMakeSpan, TraceLayer};
+use tracing::Level;
 
 use crate::routes::{api, pages, seo};
 use crate::state::AppState;
@@ -105,7 +106,7 @@ pub fn router(state: AppState) -> Router {
         .layer(CatchPanicLayer::new())
         .layer(PropagateRequestIdLayer::x_request_id())
         .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
-        .layer(TraceLayer::new_for_http())
+        .layer(TraceLayer::new_for_http().make_span_with(DefaultMakeSpan::new().level(Level::INFO)))
 }
 
 fn serve_dir(path: &str) -> ServeDir {
