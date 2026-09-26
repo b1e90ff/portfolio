@@ -210,7 +210,7 @@ mod tests {
     #[tokio::test]
     async fn contact_rate_limit_ignores_spoofed_forwarded_for() {
         let app = test_app_with(ClientIpSource::CfConnectingIp);
-        for i in 0..RateLimitConfig::CONTACT_DEFAULT.max {
+        for i in 0..RateLimitConfig::CONTACT_DEFAULT.max.get() {
             let spoofed = format!("198.51.100.{i}");
             let headers = [
                 ("cf-connecting-ip", "203.0.113.9"),
