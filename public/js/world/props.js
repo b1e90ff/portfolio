@@ -13,13 +13,21 @@ export function house(ctx, parent, x, y, z, ry = 0) {
     }
     ctx.place('town/wall-wood-window-glass', -.5, 0, 0, Math.PI, 1, h);
     ctx.place('town/wall-wood', .5, 0, 0, 0, 1, h);
-    ctx.place('town/chimney', .5, 1, -.1, 0, 1, h);
+    chimney(ctx, h, .74, -.16);
     ctx.glowQuad(h, -.5, .55, .515, 0, .32, .34);
     ctx.glowQuad(h, -1.015, .55, 0, -Math.PI / 2, .32, .34);
     ctx.windowLight(-.5, .55, .95, h);
     ctx.windowLight(-1.4, .55, 0, h);
-    smoke(ctx, h, .82, 2.05, -.1);
+    smoke(ctx, h, .74, 1.72, -.16);
     return h;
+}
+
+function chimney(ctx, parent, x, z) {
+    const stone = ctx.flat('#8a7f76');
+    const dark = ctx.flat('#5c534c');
+    ctx.add(new THREE.BoxGeometry(.17, .62, .17), stone, x, 1.33, z, parent);
+    ctx.add(new THREE.BoxGeometry(.215, .05, .215), dark, x, 1.665, z, parent);
+    ctx.add(new THREE.BoxGeometry(.11, .012, .11), ctx.flat('#1c1714'), x, 1.694, z, parent);
 }
 
 function smoke(ctx, parent, x, y, z) {
@@ -659,24 +667,88 @@ export function campfire(ctx, parent, x, y, z) {
     const f = new THREE.Group();
     f.position.set(x, y, z);
     parent.add(f);
-    ctx.place('survival/campfire-pit', 0, 0, 0, 0, 2.4, f);
-    const flames = [[.13, .34, '#ff5a1f'], [.09, .26, '#ff9a2e'], [.05, .17, '#ffe07a']].map(([rad, h, c]) => {
-        const m = new THREE.Mesh(new THREE.ConeGeometry(rad, h, 5), ctx.emissive(c, 2.2));
-        m.position.y = h / 2 + .05;
+    const kit = rockKit(ctx);
+    for (let i = 0; i < 9; i++) {
+        const a = i / 9 * Math.PI * 2;
+        const stone = ctx.add(kit.geos[i % 3], kit.mats[i % 4], Math.cos(a) * .24, .03, Math.sin(a) * .24, f);
+        stone.scale.set(.07, .05, .06);
+        stone.rotation.y = a;
+    }
+    const bark = ctx.flat('#6b4428');
+    const cut = ctx.flat('#b88a5a');
+    for (let i = 0; i < 4; i++) {
+        const a = i / 4 * Math.PI * 2 + .4;
+        const log = new THREE.Group();
+        log.position.set(Math.cos(a) * .08, .08, Math.sin(a) * .08);
+        log.rotation.set(0, -a, .9);
+        f.add(log);
+        ctx.add(new THREE.CylinderGeometry(.028, .034, .26, 6), bark, 0, 0, 0, log);
+        ctx.add(new THREE.CylinderGeometry(.029, .029, .004, 6), cut, 0, -.131, 0, log);
+    }
+    const flames = [
+        [0, 0, .11, .4, '#e8430f'], [.06, .03, .075, .28, '#f2621a'], [-.06, -.02, .075, .3, '#f2621a'],
+        [.02, -.06, .06, .26, '#f7881f'], [0, 0, .055, .26, '#ffb52e'], [0, 0, .03, .16, '#ffe08a'],
+    ].map(([fx, fz, rad, h, color], i) => {
+        const geo = new THREE.OctahedronGeometry(1, 0);
+        geo.translate(0, 1, 0);
+        // Flames skip tone mapping so the orange stays saturated instead of washing out to white.
+        const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color, toneMapped: false }));
+        m.position.set(fx, .05, fz);
+        m.userData = { rad, h, phase: i * 1.7, rate: .009 + i * .0017 };
         f.add(m);
         return m;
     });
-    const light = ctx.glowSpot(0, .5, 0, 0xff8a3d, 2.4, 6, f);
+    const glow = new THREE.Mesh(new THREE.CircleGeometry(.55, 24), new THREE.MeshBasicMaterial({
+        map: glowTexture(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    }));
+    glow.rotation.x = -Math.PI / 2;
+    glow.position.y = .01;
+    f.add(glow);
+    const sparkMat = new THREE.MeshBasicMaterial({ color: '#ffb347', toneMapped: false });
+    const sparks = Array.from({ length: 8 }, (_, i) => {
+        const spark = new THREE.Mesh(new THREE.BoxGeometry(.018, .018, .018), sparkMat.clone());
+        spark.material.transparent = true;
+        spark.userData = { offset: hash(i, 4, 9), drift: (hash(i, 2, 7) - .5) * .18, turn: hash(i, 8, 1) * 6 };
+        f.add(spark);
+        return spark;
+    });
+    const light = ctx.glowSpot(0, .45, 0, 0xff8a3d, 2.4, 6, f);
     const base = light.intensity;
     ctx.onFrame((t) => {
-        const k = ctx.reduced ? 1 : .85 + .15 * Math.sin(t * .011) * Math.sin(t * .027);
-        flames.forEach((m, i) => {
-            m.scale.set(1, k + i * .06, 1);
-            m.rotation.y = t * .002 * (i + 1);
+        const calm = ctx.reduced;
+        flames.forEach((m) => {
+            const u = m.userData;
+            const k = calm ? 1 : .8 + .2 * Math.sin(t * u.rate + u.phase) + .08 * Math.sin(t * u.rate * 2.3 + u.phase);
+            m.scale.set(u.rad * (1.1 - k * .1), u.h / 2 * k, u.rad * (1.1 - k * .1));
+            m.rotation.set(calm ? 0 : Math.sin(t * .003 + u.phase) * .12, t * .0015 + u.phase, 0);
         });
-        light.intensity = base * k;
+        sparks.forEach((spark) => {
+            const u = spark.userData;
+            const k = (t * .00045 + u.offset) % 1;
+            spark.visible = !calm;
+            spark.position.set(Math.sin(u.turn + k * 4) * u.drift, .2 + k * .9, Math.cos(u.turn + k * 4) * u.drift);
+            spark.material.opacity = 1 - k;
+            spark.rotation.set(k * 6, k * 4, 0);
+        });
+        const flicker = calm ? 1 : .85 + .15 * Math.sin(t * .011) * Math.sin(t * .027);
+        light.intensity = base * flicker;
+        glow.material.opacity = .55 + .25 * flicker;
     });
     return f;
+}
+
+function glowTexture() {
+    const c = document.createElement('canvas');
+    c.width = 64;
+    c.height = 64;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,170,90,.55)');
+    grad.addColorStop(.5, 'rgba(255,120,50,.18)');
+    grad.addColorStop(1, 'rgba(255,100,40,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
 }
 
 export function lantern(ctx, parent, x, y, z) {
@@ -782,10 +854,14 @@ function rockGeometry(seed) {
     return geo;
 }
 
+function rockKit(ctx) {
+    ctx.rockKit ??= { geos: [0, 1, 2].map(rockGeometry), mats: ROCK_TONES.map((c) => ctx.flat(c)) };
+    return ctx.rockKit;
+}
+
 /* Boulders set into the cliff wall, with pebbles along the rim, so the edge reads as rock. */
 export function cliffRocks(ctx, parent, lvl, top, height, n, skip = null) {
-    ctx.rockKit ??= { geos: [0, 1, 2].map(rockGeometry), mats: ROCK_TONES.map((c) => ctx.flat(c)) };
-    const { geos, mats } = ctx.rockKit;
+    const { geos, mats } = rockKit(ctx);
     for (let i = 0; i < n; i++) {
         const a = (i + hash(i, n, 3) * .6) / n * Math.PI * 2;
         if (skip !== null && Math.abs(angDiff(a, skip)) < .4) continue;

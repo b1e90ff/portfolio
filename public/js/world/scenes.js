@@ -28,10 +28,11 @@ export function basecamp(ctx, o) {
 
     const [sx, sz] = at(U.fn, U.c, FALL, -.02);
     const [ex, ez] = at(T.fn, T.c, BAY, -.05);
-    const [ux, uz] = at(U.fn, U.c, FALL, -.22);
-    const [lx, lz] = at(T.fn, T.c, BAY, -.38);
-    P.waterfall(ctx, g, ux, uz, U.top - .02, T.top + .02, FALL, .5, .2, { arc: .12, foam: true });
-    P.waterfall(ctx, g, lx, lz, T.top + .02, -3.4, BAY, .62, .33, { arc: .3, mist: true, topWidth: .5 });
+    const [ux, uz] = at(U.fn, U.c, FALL, -.06);
+    const [lx, lz] = at(T.fn, T.c, BAY, -.1);
+    // The spring leaves the cliff face below the plateau rim; its flat head hides inside the rock.
+    P.waterfall(ctx, g, ux, uz, U.top - .38, T.top + .02, FALL, .42, .25, { arc: .16, foam: true });
+    P.waterfall(ctx, g, lx, lz, T.top + .02, -3.4, BAY, .62, .1, { arc: .5, mist: true, topWidth: .5 });
     const len = Math.hypot(ex - sx, ez - sz);
     P.stream(ctx, g, sx, sz, ex, ez, T.top + .01, .5);
     // The stream blocks the dogs except for a gap at its midpoint where the bridge crosses.
