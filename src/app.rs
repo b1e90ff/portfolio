@@ -389,6 +389,15 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn experience_page_lists_the_tech_stack() {
+        let (status, body) = get(test_app(), "/de-DE/experience").await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(body.contains("Tech-Stack"));
+        assert!(body.contains("Plattform &amp; CI/CD"));
+        assert!(body.contains(r#"<span class="tag">Kubernetes</span>"#));
+    }
+
+    #[tokio::test]
     async fn project_detail_opens_modal_over_project_list() {
         let (status, body) = get(test_app(), "/en-US/projects/portfolio").await;
         assert_eq!(status, StatusCode::OK);

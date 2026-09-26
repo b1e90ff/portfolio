@@ -79,7 +79,7 @@ pub struct Messages {
     pub navigation: Navigation,
     pub hero: Hero,
     pub about: About,
-    pub skills: Vec<String>,
+    pub skills: Skills,
     pub experience: Experience,
     pub projects: Projects,
     pub contact: Contact,
@@ -180,6 +180,27 @@ pub struct Principle {
 pub struct Interests {
     pub title: String,
     pub content: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Skills {
+    pub title: String,
+    pub categories: Vec<SkillCategory>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SkillCategory {
+    pub name: String,
+    pub skills: Vec<String>,
+}
+
+impl Skills {
+    pub fn flattened(&self) -> Vec<String> {
+        self.categories
+            .iter()
+            .flat_map(|c| c.skills.iter().cloned())
+            .collect()
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -461,6 +482,22 @@ mod tests {
         let i18n = I18n::load(&["en-US".to_string()], "en-US").unwrap();
         let m = i18n.get("xx-XX");
         assert!(!m.navigation.home.is_empty());
+    }
+
+    #[test]
+    fn skills_flatten_in_category_order() {
+        let i18n = I18n::load(&["en-US".to_string()], "en-US").unwrap();
+        let skills = &i18n.get("en-US").skills;
+        let flat = skills.flattened();
+        assert_eq!(
+            flat.len(),
+            skills
+                .categories
+                .iter()
+                .map(|c| c.skills.len())
+                .sum::<usize>()
+        );
+        assert_eq!(flat.first(), skills.categories[0].skills.first());
     }
 
     #[test]

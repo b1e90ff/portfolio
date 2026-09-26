@@ -24,6 +24,17 @@ pub fn body(locale: &str, m: &Messages) -> Markup {
                 }
             }
         }
+        h2 class="section-title" { (m.skills.title) }
+        div class="stack" {
+            @for category in &m.skills.categories {
+                div class="stack-group" {
+                    h3 { (category.name) }
+                    div class="tags" {
+                        @for skill in &category.skills { span class="tag" { (skill) } }
+                    }
+                }
+            }
+        }
     };
     world::panel(locale, m, head, content)
 }

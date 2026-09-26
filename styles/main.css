@@ -895,6 +895,18 @@
         color: var(--accent-ink);
     }
 
+    .stack {
+        display: grid;
+        gap: 14px;
+    }
+
+    .stack-group h3 {
+        margin: 0 0 6px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--muted);
+    }
+
     .form {
         display: grid;
         gap: 12px;
