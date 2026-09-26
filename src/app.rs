@@ -308,7 +308,7 @@ mod tests {
         let (status, body) = get(test_app(), "/de-DE").await;
         assert_eq!(status, StatusCode::OK);
         assert!(body.contains(r#"lang="de-DE""#));
-        assert!(body.contains("Ich baue Backend-Services"));
+        assert!(body.contains("zuverlässig betrieben wird"));
     }
 
     #[tokio::test]

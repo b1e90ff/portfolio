@@ -18,7 +18,7 @@
   "hero": {
     "title": "Hi, ich bin Niklas.",
     "pageTitle": "Startseite",
-    "description": "Ich baue Backend-Services und die Plattform, auf der sie laufen – von der API über CI/CD bis zum Kubernetes-Cluster.",
+    "description": "Ich sorge dafür, dass Software nicht nur gebaut, sondern zuverlässig betrieben wird – mit durchdachter Architektur, automatisierten Plattformen und Security by Design.",
     "ctaProjects": "Projekte ansehen",
     "ctaContact": "Nachricht schreiben",
     "currentlyAt": "Aktuell bei",
