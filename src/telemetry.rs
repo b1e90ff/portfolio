@@ -1,6 +1,6 @@
 use std::env;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use opentelemetry::trace::TracerProvider as _;
 use opentelemetry::{Key, KeyValue};
 use opentelemetry_otlp::{Protocol, SpanExporter, WithExportConfig};
@@ -27,7 +27,7 @@ impl Telemetry {
             .or_else(|_| EnvFilter::try_new(DEFAULT_LOG_FILTER))
             .context("build log filter")?;
 
-        let tracer_provider = if otlp_endpoint_configured(|k| env::var(k).ok()) {
+        let tracer_provider = if otlp_endpoint_configured(|k| env::var(k).ok())? {
             Some(tracer_provider()?)
         } else {
             None
@@ -61,10 +61,19 @@ impl Telemetry {
     }
 }
 
-fn otlp_endpoint_configured(lookup: impl Fn(&str) -> Option<String>) -> bool {
-    ENDPOINT_VARS
-        .iter()
-        .any(|k| lookup(k).is_some_and(|v| !v.trim().is_empty()))
+/// The exporter has no TLS support, so only plain-HTTP collector endpoints are accepted.
+fn otlp_endpoint_configured(lookup: impl Fn(&str) -> Option<String>) -> Result<bool> {
+    let mut configured = false;
+    for var in ENDPOINT_VARS {
+        let Some(value) = lookup(var).filter(|v| !v.trim().is_empty()) else {
+            continue;
+        };
+        if !value.trim_start().starts_with("http://") {
+            bail!("{var} must use an http:// collector endpoint, got {value:?}");
+        }
+        configured = true;
+    }
+    Ok(configured)
 }
 
 fn tracer_provider() -> Result<SdkTracerProvider> {
@@ -103,8 +112,8 @@ mod tests {
 
     #[test]
     fn export_is_disabled_without_endpoint() {
-        assert!(!otlp_endpoint_configured(|_| None));
-        assert!(!otlp_endpoint_configured(|_| Some("  ".into())));
+        assert!(!otlp_endpoint_configured(|_| None).unwrap());
+        assert!(!otlp_endpoint_configured(|_| Some("  ".into())).unwrap());
     }
 
     #[test]
@@ -112,8 +121,19 @@ mod tests {
         for var in ENDPOINT_VARS {
             let lookup = |k: &str| (k == var).then(|| "http://otel-collector:4318".to_string());
             assert!(
-                otlp_endpoint_configured(lookup),
+                otlp_endpoint_configured(lookup).unwrap(),
                 "{var} should enable export"
+            );
+        }
+    }
+
+    #[test]
+    fn https_endpoint_is_rejected_at_startup() {
+        for var in ENDPOINT_VARS {
+            let lookup = |k: &str| (k == var).then(|| "https://collector.example:4318".to_string());
+            assert!(
+                otlp_endpoint_configured(lookup).is_err(),
+                "{var} should reject https"
             );
         }
     }
