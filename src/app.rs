@@ -395,6 +395,10 @@ mod tests {
         assert!(body.contains("Tech-Stack"));
         assert!(body.contains("Plattform &amp; CI/CD"));
         assert!(body.contains(r#"<span class="tag">Kubernetes</span>"#));
+        assert!(body.contains(r#"<span class="tag">Cloud Armor</span>"#));
+        let stack = body.find(r#"class="stack""#).unwrap();
+        let roles = body.find(r#"class="timeline""#).unwrap();
+        assert!(stack < roles, "tech stack renders above the roles");
     }
 
     #[tokio::test]

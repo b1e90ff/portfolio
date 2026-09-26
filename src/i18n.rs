@@ -185,6 +185,7 @@ pub struct Interests {
 #[derive(Debug, Deserialize)]
 pub struct Skills {
     pub title: String,
+    pub more: String,
     pub categories: Vec<SkillCategory>,
 }
 
@@ -207,6 +208,8 @@ impl Skills {
 pub struct Experience {
     pub title: String,
     pub heading: String,
+    #[serde(rename = "rolesTitle")]
+    pub roles_title: String,
     pub description: String,
     pub items: Vec<ExperienceItem>,
 }

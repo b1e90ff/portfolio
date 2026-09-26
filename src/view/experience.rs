@@ -14,16 +14,6 @@ pub fn body(locale: &str, m: &Messages) -> Markup {
         ..PanelHead::default()
     };
     let content = html! {
-        ol class="timeline" {
-            @for item in &m.experience.items {
-                li class="card" {
-                    span class="tag tag-accent" { (item.period) }
-                    h2 { (item.company) }
-                    p class="role" { (item.title) }
-                    p { (item.description) }
-                }
-            }
-        }
         h2 class="section-title" { (m.skills.title) }
         div class="stack" {
             @for category in &m.skills.categories {
@@ -32,6 +22,18 @@ pub fn body(locale: &str, m: &Messages) -> Markup {
                     div class="tags" {
                         @for skill in &category.skills { span class="tag" { (skill) } }
                     }
+                }
+            }
+            p class="stack-more" { (m.skills.more) }
+        }
+        h2 class="section-title" { (m.experience.roles_title) }
+        ol class="timeline" {
+            @for item in &m.experience.items {
+                li class="card" {
+                    span class="tag tag-accent" { (item.period) }
+                    h3 { (item.company) }
+                    p class="role" { (item.title) }
+                    p { (item.description) }
                 }
             }
         }

@@ -62,11 +62,13 @@
     "categories": [
       { "name": "Languages", "skills": ["Java", "Rust", "Python", "JavaScript", "Bash", "SQL"] },
       { "name": "Frameworks & testing", "skills": ["Spring Boot", "Spring", "Hibernate", "Flyway", "Axum", "Node.js", "Angular", "OpenAPI", "JUnit", "Mockito", "Playwright"] },
-      { "name": "Platform & CI/CD", "skills": ["Kubernetes", "Helm", "Docker", "Istio", "GitHub Actions", "GitLab CI/CD", "Jenkins", "Ansible", "Gradle", "Maven", "SonarQube", "Git"] },
+      { "name": "Platform & CI/CD", "skills": ["Kubernetes", "Helm", "Docker", "Istio", "GitHub Actions", "GitLab CI/CD", "Jenkins", "Ansible", "Terraform", "Gradle", "Maven", "SonarQube", "Git"] },
       { "name": "Cloud & infrastructure", "skills": ["Google Cloud", "AWS", "Hetzner", "Cloudflare", "DigitalOcean", "Proxmox", "Rancher", "Nginx", "HAProxy", "pfSense", "Tomcat"] },
+      { "name": "Google Cloud", "skills": ["GKE", "Compute Engine", "Cloud Run", "Cloud Functions", "Cloud Load Balancing", "Cloud Armor", "Cloud CDN", "Cloud DNS", "Cloud NAT", "VPC", "Private Service Connect", "IAM", "Workload Identity Federation", "Secret Manager", "Cloud KMS", "Certificate Manager", "Security Command Center", "Cloud SQL", "Memorystore", "Cloud Storage", "BigQuery", "Artifact Registry", "Cloud Monitoring", "Cloud Logging", "Cloud Trace", "Error Reporting", "Config Connector", "Deployment Manager"] },
       { "name": "Data & messaging", "skills": ["PostgreSQL", "MariaDB", "MySQL", "MongoDB", "Redis", "Kafka", "RabbitMQ", "Solr", "InfluxDB", "SQLite"] },
       { "name": "Observability", "skills": ["Prometheus", "Grafana", "OpenTelemetry"] }
-    ]
+    ],
+    "more": "…and much more – the list grows with every project."
   },
   "experience": {
     "title": "Experience",
@@ -75,8 +77,9 @@
       { "title": "Partner, Backend Developer & DevOps", "company": "ByteStudio UG", "period": "2017 - 2022", "description": "As a partner: architecture and development of infrastructure, microservices and desktop and web applications. Process and test automation, operations and project planning." },
       { "title": "Backend Developer", "company": "Freelancer", "period": "2015 - 2022", "description": "Design and development of backend applications and infrastructure for various clients – including automation, maintenance and operations." }
     ],
-    "heading": "Where I've worked",
-    "description": "Roles as a backend developer and platform engineer – from freelance projects to the platform behind Eventfrog AG."
+    "heading": "Stack & roles",
+    "description": "Roles as a backend developer and platform engineer – from freelance projects to the platform behind Eventfrog AG.",
+    "rolesTitle": "Roles"
   },
   "projects": {
     "title": "Projects",

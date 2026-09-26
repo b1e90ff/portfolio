@@ -885,7 +885,7 @@
         box-shadow: 0 0 0 4px rgb(226 190 106 / .18);
     }
 
-    .timeline h2 {
+    .timeline h3 {
         margin-top: 8px;
     }
 
@@ -898,6 +898,13 @@
     .stack {
         display: grid;
         gap: 14px;
+    }
+
+    .stack-more {
+        margin: 0;
+        font-size: 13px;
+        font-style: italic;
+        color: var(--muted);
     }
 
     .stack-group h3 {
