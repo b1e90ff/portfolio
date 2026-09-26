@@ -167,6 +167,7 @@ mod tests {
     use super::*;
     use crate::config::Settings;
     use crate::i18n::I18n;
+    use axum_client_ip::ClientIpSource;
 
     fn fixture_state() -> AppState {
         let settings = Settings {
@@ -174,6 +175,7 @@ mod tests {
             base_url: "https://example.test".into(),
             default_locale: "en-US".into(),
             locales: vec!["en-US".into(), "de-DE".into()],
+            client_ip_source: ClientIpSource::ConnectInfo,
             smtp: None,
         };
         let i18n = I18n::load(&settings.locales, &settings.default_locale).unwrap();

@@ -4,7 +4,6 @@ use anyhow::{Context, Result};
 use tokio::net::TcpListener;
 use tokio::signal;
 use tracing::info;
-use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
 mod app;
 mod config;
@@ -16,12 +15,13 @@ mod og;
 mod rate_limit;
 mod routes;
 mod state;
+mod telemetry;
 mod view;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
-    init_tracing();
+    let telemetry = telemetry::Telemetry::init()?;
 
     routes::api::boot_instant();
     let settings = config::Settings::from_env()?;
@@ -30,6 +30,10 @@ async fn main() -> Result<()> {
     info!(locales = ?i18n.locales(), default = i18n.default_locale(), "translations loaded");
 
     let state = state::AppState::new(settings.clone(), i18n);
+    rate_limit::spawn_housekeeping(
+        state.contact_rate_limit.clone(),
+        rate_limit::HOUSEKEEPING_INTERVAL,
+    );
     let router = app::router(state);
 
     let addr: SocketAddr = settings.bind.parse().context("invalid PORTFOLIO_BIND")?;
@@ -38,27 +42,17 @@ async fn main() -> Result<()> {
         .with_context(|| format!("failed to bind {addr}"))?;
 
     info!(%addr, base_url = %settings.base_url, "portfolio listening");
-    axum::serve(
+    let served = axum::serve(
         listener,
-        router.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+        router.into_make_service_with_connect_info::<SocketAddr>(),
     )
     .with_graceful_shutdown(shutdown_signal())
     .await
-    .context("axum server error")?;
+    .context("axum server error");
 
     info!("shutdown complete");
-    Ok(())
-}
-
-fn init_tracing() {
-    let filter = EnvFilter::try_from_env("PORTFOLIO_LOG")
-        .or_else(|_| EnvFilter::try_new("info,portfolio=debug,tower_http=info"))
-        .expect("static filter is valid");
-
-    tracing_subscriber::registry()
-        .with(filter)
-        .with(fmt::layer().with_target(false).with_level(true).compact())
-        .init();
+    telemetry.shutdown();
+    served
 }
 
 async fn shutdown_signal() {

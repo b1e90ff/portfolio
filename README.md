@@ -70,6 +70,9 @@ The chart wraps the generic `web-service` and `istio-sidecar-configurator` chart
 | `PORTFOLIO_DEFAULT_LOCALE` | no | `en-US` | Redirect target for `/` |
 | `PORTFOLIO_LOCALES` | no | `en-US,de-DE` | Comma-separated catalogues to load |
 | `PORTFOLIO_LOG` | no | `info,portfolio=debug,tower_http=info` | `tracing_subscriber` filter |
+| `PORTFOLIO_CLIENT_IP_SOURCE` | no | `ConnectInfo` | Client IP source for contact rate limiting: `ConnectInfo`, `CfConnectingIp`, `RightmostXForwardedFor`, `XEnvoyExternalAddress`, `XRealIp`, `TrueClientIp`. Set to the header the outermost trusted proxy writes; production uses `CfConnectingIp` |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | no | — | OTLP/HTTP collector base URL (`http://…:4318`); span export stays off while unset. `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` overrides it |
+| `OTEL_SERVICE_NAME` | no | `portfolio` | Service name on exported spans |
 | `SMTP_HOST` | for contact form | — | If unset, `/api/contact` returns 503 |
 | `SMTP_PORT` | no | `587` | |
 | `SMTP_USERNAME` | for contact form | — | |

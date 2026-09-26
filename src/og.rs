@@ -118,6 +118,7 @@ mod tests {
     use super::*;
     use crate::config::Settings;
     use crate::i18n::I18n;
+    use axum_client_ip::ClientIpSource;
 
     fn fixture_messages() -> Arc<Messages> {
         let i18n = I18n::load(&["en-US".to_string()], "en-US").unwrap();
@@ -163,6 +164,7 @@ mod tests {
             base_url: "https://example.test".into(),
             default_locale: "en-US".into(),
             locales: vec!["en-US".into()],
+            client_ip_source: ClientIpSource::ConnectInfo,
             smtp: None,
         }
     }

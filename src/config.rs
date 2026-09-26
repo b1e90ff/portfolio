@@ -1,6 +1,7 @@
 use std::env;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
+use axum_client_ip::ClientIpSource;
 
 #[derive(Debug, Clone)]
 pub struct Settings {
@@ -8,6 +9,7 @@ pub struct Settings {
     pub base_url: String,
     pub default_locale: String,
     pub locales: Vec<String>,
+    pub client_ip_source: ClientIpSource,
     pub smtp: Option<SmtpSettings>,
 }
 
@@ -52,6 +54,14 @@ impl Settings {
             "default locale {default_locale} not in PORTFOLIO_LOCALES"
         );
 
+        let client_ip_source = match env::var("PORTFOLIO_CLIENT_IP_SOURCE") {
+            Ok(raw) if !raw.trim().is_empty() => raw
+                .trim()
+                .parse()
+                .with_context(|| format!("invalid PORTFOLIO_CLIENT_IP_SOURCE {raw:?}"))?,
+            _ => ClientIpSource::ConnectInfo,
+        };
+
         let smtp = SmtpSettings::from_env_opt();
 
         Ok(Self {
@@ -59,6 +69,7 @@ impl Settings {
             base_url,
             default_locale,
             locales,
+            client_ip_source,
             smtp,
         })
     }
@@ -114,6 +125,7 @@ mod tests {
                 "BASE_URL",
                 "PORTFOLIO_DEFAULT_LOCALE",
                 "PORTFOLIO_LOCALES",
+                "PORTFOLIO_CLIENT_IP_SOURCE",
             ] {
                 std::env::remove_var(k);
             }
@@ -129,6 +141,7 @@ mod tests {
             assert_eq!(s.base_url, "http://localhost:3000");
             assert_eq!(s.default_locale, "en-US");
             assert!(s.locales.iter().any(|l| l == "en-US"));
+            assert_eq!(s.client_ip_source, ClientIpSource::ConnectInfo);
         });
     }
 
@@ -166,6 +179,29 @@ mod tests {
             }
             let s = Settings::from_env().unwrap();
             assert_eq!(s.locales, vec!["en-US", "de-DE", "fr-FR"]);
+        });
+    }
+
+    #[test]
+    fn client_ip_source_is_parsed() {
+        with_clean_env(|| {
+            // SAFETY: serialised via ENV_LOCK.
+            unsafe {
+                std::env::set_var("PORTFOLIO_CLIENT_IP_SOURCE", "CfConnectingIp");
+            }
+            let s = Settings::from_env().unwrap();
+            assert_eq!(s.client_ip_source, ClientIpSource::CfConnectingIp);
+        });
+    }
+
+    #[test]
+    fn unknown_client_ip_source_is_rejected() {
+        with_clean_env(|| {
+            // SAFETY: serialised via ENV_LOCK.
+            unsafe {
+                std::env::set_var("PORTFOLIO_CLIENT_IP_SOURCE", "LeftmostXForwardedFor");
+            }
+            assert!(Settings::from_env().is_err());
         });
     }
 }

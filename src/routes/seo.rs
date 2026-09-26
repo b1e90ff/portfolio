@@ -232,6 +232,7 @@ mod tests {
     use crate::state::AppState;
     use axum::body::Body;
     use axum::http::{Request, StatusCode};
+    use axum_client_ip::ClientIpSource;
     use http_body_util::BodyExt;
     use tower::ServiceExt;
 
@@ -241,6 +242,7 @@ mod tests {
             base_url: "https://example.test".into(),
             default_locale: "en-US".into(),
             locales: vec!["en-US".into(), "de-DE".into()],
+            client_ip_source: ClientIpSource::ConnectInfo,
             smtp: None,
         };
         let i18n = I18n::load(&settings.locales, &settings.default_locale).unwrap();
