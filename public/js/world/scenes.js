@@ -48,21 +48,29 @@ export function basecamp(ctx, o) {
 
     P.house(ctx, g, -1.25, U.top, -1.35, .35);
     P.mast(ctx, g, .2, U.top, -2.1);
-    const [hx, hz] = at(T.fn, T.c, -.25, .9);
-    P.shed(ctx, g, hx, T.top, hz, -1.9);
+    const [hx, hz] = at(T.fn, T.c, -.4, 1.05);
+    const shedYaw = -.75;
+    P.shed(ctx, g, hx, T.top, hz, shedYaw);
+    const nearShed = (x, z) => Math.hypot(x - hx, z - hz) < 1.2;
+    const doorX = hx - .28 * Math.cos(shedYaw) + .38 * Math.sin(shedYaw);
+    const doorZ = hz + .28 * Math.sin(shedYaw) + .38 * Math.cos(shedYaw);
+    for (const [k, ry] of [[.3, .4], [.62, -.2], [.95, .7]]) {
+        ctx.place('nature/path_stone', doorX + Math.sin(shedYaw) * k, T.top + .005, doorZ + Math.cos(shedYaw) * k, ry, .9, g);
+    }
     occ.push({ x: hx, z: hz, r: .7 });
     P.woodBridge(ctx, g, bridge, T.top);
     const fx = -2;
     const fz = 2.2;
     P.cliffRocks(ctx, g, T, T.top, T.top, 34, BAY);
     P.cliffRocks(ctx, g, U, U.top, U.top - T.top, 16, FALL);
-    P.trees(ctx, g, T, [2.3, 2.7, 3.1, 3.6, 4.2, 4.6, 5.2, 5.8, .3], .45, 1, (x, z) => Math.hypot(x - fx, z - fz) < 1);
+    P.trees(ctx, g, T, [2.3, 2.7, 3.1, 3.6, 4.2, 4.6, 5.2, 5.8, .3], .45, 1, (x, z) => Math.hypot(x - fx, z - fz) < 1 || nearShed(x, z));
     P.trees(ctx, g, U, [3.4, 4.1, 4.9, 2.6], .35, 1.1);
     const onPlateau = (x, z) => Math.hypot(x - U.c.x, z - U.c.z) < U.fn(Math.atan2(z - U.c.z, x - U.c.x)) + .1;
     P.tufts(ctx, g, T, 16, 1.6, (x, z) => onPlateau(x, z)
         || Math.abs(angDiff(Math.atan2(z, x), BAY)) < .35
         || Math.hypot(x + .3, z - 1.9) < 1.1
-        || Math.hypot(x - fx, z - fz) < .7);
+        || Math.hypot(x - fx, z - fz) < .7
+        || nearShed(x, z));
     P.tufts(ctx, g, U, 7, .9);
     for (const [x, z, ry] of [[-.6, -.45, .3], [0, -.2, .6]]) ctx.place('nature/path_stone', x, U.top + .005, z, ry, 1, g);
     for (const [x, z, ry] of [[-1.3, 1.1, .5], [-.4, 1.2, .1], [.4, 1.25, -.2]]) ctx.place('nature/path_stone', x, T.top + .005, z, ry, 1, g);
