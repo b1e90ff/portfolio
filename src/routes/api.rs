@@ -1,11 +1,11 @@
-use std::net::IpAddr;
 use std::sync::OnceLock;
 use std::time::Instant;
 
 use axum::Json;
-use axum::extract::{ConnectInfo, State};
-use axum::http::{HeaderMap, StatusCode};
+use axum::extract::State;
+use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use axum_client_ip::{ClientIp, Rejection};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use tracing::warn;
@@ -62,11 +62,22 @@ pub async fn health() -> Json<HealthResponse> {
 
 pub async fn contact(
     State(state): State<AppState>,
-    headers: HeaderMap,
-    ConnectInfo(addr): ConnectInfo<std::net::SocketAddr>,
+    client_ip: Result<ClientIp, Rejection>,
     Json(payload): Json<ContactPayload>,
 ) -> Response {
-    let ip = client_ip(&headers).unwrap_or(addr.ip());
+    let ip = match client_ip {
+        Ok(ClientIp(ip)) => ip,
+        Err(rejection) => {
+            tracing::error!(%rejection, "client ip unresolvable; check PORTFOLIO_CLIENT_IP_SOURCE");
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiError {
+                    error: "client_ip_unavailable",
+                }),
+            )
+                .into_response();
+        }
+    };
 
     if !state.contact_rate_limit.check(ip) {
         warn!(%ip, "contact form rate-limited");
@@ -127,39 +138,9 @@ pub async fn contact(
     }
 }
 
-fn client_ip(headers: &HeaderMap) -> Option<IpAddr> {
-    headers
-        .get("x-forwarded-for")
-        .and_then(|v| v.to_str().ok())
-        .and_then(|s| s.split(',').next())
-        .and_then(|s| s.trim().parse().ok())
-        .or_else(|| {
-            headers
-                .get("x-real-ip")
-                .and_then(|v| v.to_str().ok())
-                .and_then(|s| s.trim().parse().ok())
-        })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn client_ip_prefers_forwarded_for() {
-        let mut h = HeaderMap::new();
-        h.insert("x-forwarded-for", "203.0.113.5, 10.0.0.1".parse().unwrap());
-        let ip = client_ip(&h).unwrap();
-        assert_eq!(ip.to_string(), "203.0.113.5");
-    }
-
-    #[test]
-    fn client_ip_falls_back_to_real_ip() {
-        let mut h = HeaderMap::new();
-        h.insert("x-real-ip", "198.51.100.7".parse().unwrap());
-        let ip = client_ip(&h).unwrap();
-        assert_eq!(ip.to_string(), "198.51.100.7");
-    }
 
     #[test]
     fn payload_validates_email_and_length() {

@@ -9,6 +9,8 @@ web-service:
   extraEnv:
     - name: PORTFOLIO_BASE_URL
       value: https://tat.systems
+    - name: PORTFOLIO_CLIENT_IP_SOURCE
+      value: CfConnectingIp
   externalRouting:
     enabled: true
     hostname: ""
