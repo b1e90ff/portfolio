@@ -35,7 +35,9 @@ pub fn router(state: AppState) -> Router {
         let prefix = format!("/{locale}");
         pages_router = pages_router
             .route(&prefix, get(pages::home))
+            .route(&format!("{prefix}/basecamp"), get(pages::basecamp))
             .route(&format!("{prefix}/about"), get(pages::about))
+            .route(&format!("{prefix}/experience"), get(pages::experience))
             .route(&format!("{prefix}/projects"), get(pages::projects_list))
             .route(
                 &format!("{prefix}/projects/{{id}}"),
@@ -68,6 +70,10 @@ pub fn router(state: AppState) -> Router {
         .fallback_service(serve_dir("public/vendor"))
         .layer(immutable_cache());
 
+    let scripts = Router::new()
+        .fallback_service(serve_dir("public/js"))
+        .layer(revalidate_cache());
+
     let not_found_router = Router::new()
         .fallback(pages::fallback_not_found)
         .with_state(state.clone());
@@ -85,6 +91,7 @@ pub fn router(state: AppState) -> Router {
         .nest("/css", css)
         .nest("/fonts", fonts)
         .nest("/vendor", vendor)
+        .nest("/js", scripts)
         .fallback_service(public_assets)
         .layer(client_ip_source.into_extension())
         .layer(SetResponseHeaderLayer::if_not_present(
@@ -128,6 +135,11 @@ fn immutable_cache() -> SetResponseHeaderLayer<HeaderValue> {
     )
 }
 
+// Module imports carry no version query, so browsers must revalidate them on every load.
+fn revalidate_cache() -> SetResponseHeaderLayer<HeaderValue> {
+    SetResponseHeaderLayer::if_not_present(CACHE_CONTROL, HeaderValue::from_static("no-cache"))
+}
+
 fn short_cache() -> SetResponseHeaderLayer<HeaderValue> {
     SetResponseHeaderLayer::if_not_present(
         CACHE_CONTROL,
@@ -153,6 +165,7 @@ mod tests {
     use crate::config::Settings;
     use crate::i18n::I18n;
     use crate::rate_limit::RateLimitConfig;
+    use crate::view::layout::THREE_VENDOR;
     use axum::body::Body;
     use axum::extract::ConnectInfo;
     use axum::http::request::Builder;
@@ -295,7 +308,7 @@ mod tests {
         let (status, body) = get(test_app(), "/de-DE").await;
         assert_eq!(status, StatusCode::OK);
         assert!(body.contains(r#"lang="de-DE""#));
-        assert!(body.contains("Architektur, die hält"));
+        assert!(body.contains("Ich baue Backend-Services"));
     }
 
     #[tokio::test]
@@ -339,11 +352,63 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn island_pages_render_their_panel() {
+        for (path, island) in [
+            ("/de-DE/basecamp", "basecamp"),
+            ("/de-DE/projects", "projects"),
+            ("/de-DE/about", "about"),
+            ("/de-DE/experience", "experience"),
+            ("/de-DE/contact", "contact"),
+        ] {
+            let (status, body) = get(test_app(), path).await;
+            assert_eq!(status, StatusCode::OK, "{path}");
+            assert!(
+                body.contains(&format!(r#"data-panel="{island}""#)),
+                "{path}"
+            );
+            assert!(
+                body.contains(&format!(r#"data-island="{island}" aria-current="page""#)),
+                "{path}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn project_detail_opens_modal_over_project_list() {
+        let (status, body) = get(test_app(), "/en-US/projects/portfolio").await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(body.contains(r#"data-panel="projects""#));
+        assert!(body.contains("data-modal"));
+        assert!(body.contains(r#"data-panel="projects" inert"#));
+        assert!(body.contains(r#"<h2 id="panel-title">"#));
+        assert!(body.contains(r#"<h1 id="modal-title""#));
+        assert!(body.contains(r#"href="/en-US/projects" data-nav data-modal-close"#));
+    }
+
+    #[tokio::test]
+    async fn legal_pages_mark_no_island_as_current() {
+        for path in ["/de-DE/privacy", "/de-DE/impressum"] {
+            let (status, body) = get(test_app(), path).await;
+            assert_eq!(status, StatusCode::OK, "{path}");
+            assert!(body.contains(r#"data-island="overview""#), "{path}");
+            assert!(!body.contains(r#"aria-current="page""#), "{path}");
+        }
+    }
+
+    #[tokio::test]
+    async fn unknown_path_renders_not_found_in_requested_locale() {
+        let (status, body) = get(test_app(), "/de-DE/does-not-exist").await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        assert!(body.contains(r#"lang="de-DE""#));
+        assert!(body.contains("Verlaufen?"));
+    }
+
+    #[tokio::test]
     async fn vendored_assets_are_cached_immutably() {
         let res = test_app()
             .oneshot(
                 Request::builder()
-                    .uri("/vendor/three-0.186.1/three.module.js")
+                    .uri(format!("{THREE_VENDOR}/three.module.js"))
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -354,6 +419,21 @@ mod tests {
             res.headers()["cache-control"],
             "public, max-age=31536000, immutable"
         );
+    }
+
+    #[tokio::test]
+    async fn scripts_are_revalidated() {
+        let res = test_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/js/world/world.js")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+        assert_eq!(res.headers()["cache-control"], "no-cache");
     }
 
     #[tokio::test]

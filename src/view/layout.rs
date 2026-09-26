@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use maud::{DOCTYPE, Markup, PreEscaped, html};
 use serde_json::Value;
 
@@ -5,7 +7,10 @@ use crate::i18n::{I18n, Messages};
 use crate::keywords;
 use crate::locale::alternate_links;
 use crate::state::AppState;
+use crate::view::world::{self, Island};
 use crate::view::{nav, schema};
+
+pub const THREE_VENDOR: &str = "/vendor/three-0.186.1";
 
 pub fn asset(url: &str) -> String {
     if url.starts_with("http") || url.contains('?') {
@@ -25,6 +30,7 @@ pub struct Page<'a> {
     pub og_type: &'a str,
     pub og_image: Option<String>,
     pub extra_schemas: Vec<Value>,
+    pub island: Option<Island>,
     pub body: Markup,
 }
 
@@ -48,6 +54,7 @@ impl<'a> Page<'a> {
             og_type: "website",
             og_image: None,
             extra_schemas: Vec::new(),
+            island: None,
             body,
         }
     }
@@ -72,6 +79,11 @@ pub fn layout(p: Page<'_>) -> Markup {
         .og_image
         .clone()
         .unwrap_or_else(|| format!("{base_url}/{}/opengraph-image", p.locale));
+    let import_map = format!(
+        r#"{{"imports":{{"three":"{THREE_VENDOR}/three.module.js","three/addons/":"{THREE_VENDOR}/addons/"}}}}"#
+    );
+
+    let island = p.island.unwrap_or(Island::Overview);
 
     let mut schemas = vec![
         schema::organization(p.state, p.locale, p.messages),
@@ -81,7 +93,7 @@ pub fn layout(p: Page<'_>) -> Markup {
 
     html! {
         (DOCTYPE)
-        html lang=(p.locale) {
+        html lang=(p.locale) data-mood=(nav::DEFAULT_MOOD) {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover";
@@ -90,8 +102,7 @@ pub fn layout(p: Page<'_>) -> Markup {
                 meta name="keywords" content=(keywords_str);
                 meta name="format-detection" content="telephone=no, address=no, email=no";
                 meta name="robots" content="index, follow, max-image-preview:large";
-                meta name="theme-color" content="#060608" media="(prefers-color-scheme: dark)";
-                meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)";
+                meta name="theme-color" content="#1f1840";
                 meta name="color-scheme" content="dark light";
 
                 link rel="canonical" href=(canonical);
@@ -122,29 +133,29 @@ pub fn layout(p: Page<'_>) -> Markup {
                 link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png";
                 link rel="manifest" href="/site.webmanifest";
 
-                link rel="stylesheet" href={ "/css/main.css?v=" (env!("CARGO_PKG_VERSION")) };
+                link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin;
+                link rel="stylesheet" href=(asset("/css/main.css"));
 
-                script {
-                    (PreEscaped(THEME_INIT))
-                }
+                script { (PreEscaped(mood_init())) }
+                script type="importmap" { (PreEscaped(import_map)) }
+                script type="module" src=(asset("/js/app.js")) {}
                 @for s in &schemas {
                     (schema::json_ld(s))
                 }
             }
-            body class="min-h-screen" {
+            body data-island=(island.key()) {
                 a href="#main-content" class="skip-link" { (p.messages.navigation.skip_to_content) }
-                div class="aurora-bg" aria-hidden="true" {
-                    div class="aurora-blob aurora-warm" {}
-                    div class="aurora-blob aurora-cool" {}
-                    div class="aurora-grid" {}
-                    div class="aurora-vignette" {}
-                }
-                (nav::header(p.state, p.locale, p.path, p.messages))
-                main #main-content class="relative z-10 pt-14" {
+                div class="backdrop" aria-hidden="true" {}
+                canvas #world class="world" role="img"
+                       aria-label=(p.messages.world.scene_label)
+                       data-signposts=(world::signposts(p.messages)) {}
+                (nav::topbar(p.state, p.locale, p.path, p.messages))
+                (nav::pins(p.locale, p.messages))
+                main #main-content data-island=(island.key()) {
                     (p.body)
                 }
-                (nav::footer(p.state, p.locale, p.messages))
-                script src={ "/js/app.js?v=" (env!("CARGO_PKG_VERSION")) } defer {}
+                (nav::dock(p.locale, p.messages, p.island))
+                p class="loading" data-loading hidden { (p.messages.world.loading) }
             }
         }
     }
@@ -158,4 +169,12 @@ fn templated(template: &str, title: &str) -> String {
     }
 }
 
-const THEME_INIT: &str = r#"(function(){try{var s=localStorage.getItem('theme');var p=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';var t=(s==='dark'||s==='light')?s:p;document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();"#;
+fn mood_init() -> &'static str {
+    static SCRIPT: LazyLock<String> = LazyLock::new(|| {
+        let moods = nav::MOODS.join("|");
+        format!(
+            r#"(function(){{var d=document.documentElement;d.classList.add('js');try{{var m=localStorage.getItem('mood');if(/^({moods})$/.test(m))d.dataset.mood=m;}}catch(e){{}}}})();"#
+        )
+    });
+    &SCRIPT
+}

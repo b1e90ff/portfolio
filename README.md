@@ -2,9 +2,30 @@
 
 Server-side rendered personal portfolio built in Rust with Axum, Maud and Tailwind CSS v4.
 
+- [How It Works](#how-it-works)
+- [Frontend](#frontend)
+- [Quick Start](#quick-start)
+- [Helm Chart](#helm-chart)
+- [Routes](#routes)
+- [Configuration](#configuration)
+- [Third-Party Assets](#third-party-assets)
+- [Quality Gates](#quality-gates)
+
 ## How It Works
 
 The server renders every page on each request from a typed JSON catalogue under `i18n/<locale>.json` and a Tailwind-compiled stylesheet. Locales are routed under `/<locale>/<path>` with the root redirecting to the configured default. SEO surfaces (sitemap, robots, site.webmanifest, hreflang, OpenGraph, JSON-LD) are emitted server-side per locale. The contact form posts to `/api/contact`, which validates input, rate-limits per IP, and delivers via SMTP through lettre.
+
+## Frontend
+
+Every route renders a complete page: an overview intro or a content panel, the island dock and the topbar with mood and language switchers. `public/js/app.js` then lazy-loads the three.js archipelago from `public/js/world/`, flies the camera to the island that belongs to the current route and turns `data-nav` links into in-place transitions: fetch the target page, fly, swap `main`, `pushState`. Project details open as a modal over the project list. Without WebGL or JavaScript the same links fall back to plain page loads over a CSS sky.
+
+| Path | Contents |
+|---|---|
+| `public/js/world/engine.js` | Renderer, sky, lighting moods, camera rig, terrain |
+| `public/js/world/props.js` | Props, dogs and their steering |
+| `public/js/world/scenes.js` | Island compositions |
+| `public/js/world/world.js` | Island layout, flights, pins, picking |
+| `styles/main.css` | Mood tokens and frosted-glass components |
 
 ## Quick Start
 
@@ -51,10 +72,12 @@ The chart wraps the generic `web-service` and `istio-sidecar-configurator` chart
 | Path | Purpose |
 |---|---|
 | `/` | Redirect to `/<default-locale>` |
-| `/<locale>` | Home |
+| `/<locale>` | Archipelago overview |
+| `/<locale>/basecamp` | Introduction |
+| `/<locale>/projects` | Project list |
+| `/<locale>/projects/<id>` | Project list with the detail modal open |
 | `/<locale>/about` | About |
-| `/<locale>/projects` | Project list, client-side filterable |
-| `/<locale>/projects/<id>` | Project detail |
+| `/<locale>/experience` | Experience timeline |
 | `/<locale>/contact` | Contact form |
 | `/<locale>/privacy` · `/<locale>/impressum` | Legal pages |
 | `POST /api/contact` | JSON submission, lettre SMTP |
@@ -80,6 +103,17 @@ The chart wraps the generic `web-service` and `istio-sidecar-configurator` chart
 | `SMTP_FROM` | no | `SMTP_USERNAME` | Sender mailbox |
 | `SMTP_TO` | no | `SMTP_USERNAME` | Recipient mailbox |
 | `SMTP_USE_STARTTLS` | no | `true` | Set `false` for implicit TLS on port 465 |
+
+## Third-Party Assets
+
+| Asset | Location | License |
+|---|---|---|
+| three.js 0.186.1 | `public/vendor/three-0.186.1/` | MIT |
+| Kenney Nature, Fantasy Town and Survival kits (subset) | `public/models/` | CC0 1.0 |
+| Bricolage Grotesque, JetBrains Mono | `assets/fonts/` | OFL 1.1 |
+| Inter (OpenGraph cards) | `assets/fonts/` | OFL 1.1 |
+
+`scripts/vendor.sh` re-fetches three.js and the web fonts from npm and verifies each tarball against its pinned sha512 integrity hash. All assets are self-hosted; the site makes no third-party requests.
 
 ## Quality Gates
 

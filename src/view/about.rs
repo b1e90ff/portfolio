@@ -3,65 +3,37 @@ use serde_json::Value;
 
 use crate::i18n::Messages;
 use crate::state::AppState;
-use crate::view::layout::asset;
-use crate::view::schema;
+use crate::view::world::{self, Island, PanelHead};
+use crate::view::{icons, schema};
 
-pub fn body(_state: &AppState, _locale: &str, m: &Messages) -> Markup {
-    html! {
-        section class="container mx-auto px-4 pt-32 pb-16 sm:pt-40" {
-            div class="max-w-3xl mx-auto" {
-                div class="flex flex-col sm:flex-row items-center sm:items-start gap-8 mb-16" {
-                    div class="shrink-0" {
-                        div class="relative w-24 h-24 aspect-square" {
-                            img src=(asset(&m.about.avatar.image))
-                                alt=(m.about.avatar.alt)
-                                width="96" height="96"
-                                loading="eager" decoding="async"
-                                class="rounded-full ring-soft object-cover w-full h-full";
-                        }
-                    }
-                    div class="text-center sm:text-left flex-1 min-w-0" {
-                        p class="t-caption mb-3" { (m.about.about_title) }
-                        h1 class="t-h1 mb-4" {
-                            span class="text-aurora" { (m.structured_data.person.name) }
-                        }
-                    }
-                }
-
-                section class="mb-16 border-t border-[var(--border-subtle)] pt-8" data-fade {
-                    h2 class="t-caption mb-5" { (m.about.about_title) }
-                    p class="t-lead mb-8 whitespace-pre-line" { (m.about.bio.content) }
-                    ul class="space-y-3" {
-                        @for item in &m.about.bio.highlights {
-                            li class="flex items-start gap-3 t-small" {
-                                span class="shrink-0 mt-1" style="color: var(--accent-warm);" { (icon_check()) }
-                                span { (item) }
-                            }
-                        }
-                    }
-                }
-
-                section class="mb-16 border-t border-[var(--border-subtle)] pt-8" data-fade {
-                    h2 class="t-caption mb-5" { (m.about.approach.title) }
-                    p class="t-lead mb-8 whitespace-pre-line" { (m.about.approach.content) }
-                    div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8" {
-                        @for principle in &m.about.approach.principles {
-                            div {
-                                h3 class="text-sm font-semibold mb-2"
-                                   style="color: var(--accent-warm);" { (principle.title) }
-                                p class="t-small leading-relaxed" { (principle.description) }
-                            }
-                        }
-                    }
-                }
-
-                section class="border-t border-[var(--border-subtle)] pt-8" data-fade {
-                    h2 class="t-caption mb-5" { (m.about.interests.title) }
-                    p class="t-lead whitespace-pre-line" { (m.about.interests.content) }
+pub fn body(locale: &str, m: &Messages) -> Markup {
+    let head = PanelHead {
+        id: Island::About.key(),
+        eyebrow: Island::About.label(m),
+        title: &m.about.bio.title,
+        ..PanelHead::default()
+    };
+    let content = html! {
+        (world::profile(m, &m.about.bio.content))
+        ul class="highlights" {
+            @for item in &m.about.bio.highlights {
+                li { (PreEscaped(icons::CHECK)) span { (item) } }
+            }
+        }
+        h2 class="section-title" { (m.about.approach.title) }
+        p class="lead" { (m.about.approach.content) }
+        div class="grid-2" {
+            @for principle in &m.about.approach.principles {
+                div class="card" {
+                    h3 { (principle.title) }
+                    p { (principle.description) }
                 }
             }
         }
-    }
+        h2 class="section-title" { (m.about.interests.title) }
+        p class="lead" { (m.about.interests.content) }
+    };
+    world::panel(locale, m, head, content)
 }
 
 pub fn extra_schemas(state: &AppState, locale: &str, m: &Messages) -> Vec<Value> {
@@ -84,10 +56,4 @@ pub fn extra_schemas(state: &AppState, locale: &str, m: &Messages) -> Vec<Value>
             ],
         ),
     ]
-}
-
-fn icon_check() -> Markup {
-    html! {
-        (PreEscaped(r#"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>"#))
-    }
 }

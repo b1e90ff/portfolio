@@ -12,7 +12,9 @@ use crate::state::AppState;
 
 const STATIC_PATHS: &[(&str, &str, &str)] = &[
     ("", "1.0", "weekly"),
+    ("/basecamp", "0.8", "monthly"),
     ("/about", "0.8", "monthly"),
+    ("/experience", "0.8", "monthly"),
     ("/projects", "0.9", "weekly"),
     ("/contact", "0.8", "monthly"),
     ("/privacy", "0.3", "yearly"),
@@ -280,7 +282,9 @@ mod tests {
         for locale in ["en-US", "de-DE"] {
             for path in [
                 "",
+                "/basecamp",
                 "/about",
+                "/experience",
                 "/projects",
                 "/contact",
                 "/privacy",
