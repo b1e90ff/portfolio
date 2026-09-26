@@ -4,7 +4,7 @@ CSS_IN  := styles/main.css
 CSS_OUT := public/css/main.css
 TAILWIND := scripts/tailwind.sh
 
-.PHONY: help css css-watch run dev build release fmt clippy test check audit clean
+.PHONY: help css css-watch run dev build release fmt clippy test test-js e2e check audit clean
 
 help:
 	@printf "Targets:\n"
@@ -16,7 +16,9 @@ help:
 	@printf "  fmt          cargo fmt --all\n"
 	@printf "  clippy       cargo clippy --all-targets -- -D warnings\n"
 	@printf "  test         cargo test --all-features\n"
-	@printf "  check        fmt --check + clippy + test\n"
+	@printf "  test-js      Frontend unit tests (node --test)\n"
+	@printf "  e2e          Browser smoke tests (Playwright)\n"
+	@printf "  check        fmt --check + clippy + test + test-js\n"
 	@printf "  audit        cargo audit\n"
 	@printf "  clean        cargo clean + remove built CSS\n"
 
@@ -49,10 +51,17 @@ clippy:
 test:
 	cargo test --all-features
 
+test-js:
+	node --import ./tests/js/register.mjs --test 'tests/js/*.test.mjs'
+
+e2e: css
+	npx playwright test
+
 check:
 	cargo fmt --all --check
 	cargo clippy --all-targets --all-features -- -D warnings
 	cargo test --all-features
+	$(MAKE) test-js
 
 audit:
 	cargo audit --deny warnings

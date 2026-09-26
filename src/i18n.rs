@@ -79,7 +79,7 @@ pub struct Messages {
     pub navigation: Navigation,
     pub hero: Hero,
     pub about: About,
-    pub skills: Skills,
+    pub skills: Vec<String>,
     pub experience: Experience,
     pub projects: Projects,
     pub contact: Contact,
@@ -90,6 +90,8 @@ pub struct Messages {
     #[serde(rename = "structuredData")]
     pub structured_data: StructuredData,
     pub notfound: NotFound,
+    pub basecamp: Basecamp,
+    pub world: World,
 }
 
 #[derive(Debug, Deserialize)]
@@ -112,17 +114,9 @@ pub struct ManifestStrings {
 #[derive(Debug, Deserialize)]
 pub struct Navigation {
     pub home: String,
-    pub projects: String,
     pub about: String,
-    pub contact: String,
-    #[serde(rename = "openMenu")]
-    pub open_menu: String,
-    #[serde(rename = "closeMenu")]
-    pub close_menu: String,
     #[serde(rename = "skipToContent")]
     pub skip_to_content: String,
-    #[serde(rename = "toggleTheme")]
-    pub toggle_theme: String,
     #[serde(rename = "languageShort")]
     pub language_short: String,
 }
@@ -130,10 +124,6 @@ pub struct Navigation {
 #[derive(Debug, Deserialize)]
 pub struct Hero {
     pub title: String,
-    #[serde(rename = "titlePrefix")]
-    pub title_prefix: String,
-    #[serde(rename = "titleName")]
-    pub title_name: String,
     #[serde(rename = "pageTitle")]
     pub page_title: String,
     pub description: String,
@@ -147,6 +137,7 @@ pub struct Hero {
     pub open_source: String,
     #[serde(rename = "currentEmployerUrl")]
     pub current_employer_url: String,
+    pub location: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -192,25 +183,10 @@ pub struct Interests {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Skills {
-    pub title: String,
-    #[serde(rename = "moreSkillsTooltip")]
-    pub more_skills_tooltip: String,
-    pub categories: Vec<SkillCategory>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct SkillCategory {
-    pub name: String,
-    pub icon: String,
-    pub skills: Vec<String>,
-    #[serde(rename = "moreSkillsText")]
-    pub more_skills_text: String,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct Experience {
     pub title: String,
+    pub heading: String,
+    pub description: String,
     pub items: Vec<ExperienceItem>,
 }
 
@@ -220,13 +196,12 @@ pub struct ExperienceItem {
     pub company: String,
     pub period: String,
     pub description: String,
-    #[serde(default)]
-    pub technologies: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Projects {
     pub title: String,
+    pub heading: String,
     pub description: String,
     #[serde(rename = "viewLive")]
     pub view_live: String,
@@ -238,22 +213,8 @@ pub struct Projects {
     pub view_details: String,
     #[serde(rename = "backToProjects")]
     pub back_to_projects: String,
-    #[serde(rename = "searchPlaceholder")]
-    pub search_placeholder: String,
-    #[serde(rename = "statusAll")]
-    pub status_all: String,
-    #[serde(rename = "technologyAll")]
-    pub technology_all: String,
-    #[serde(rename = "noProjects")]
-    pub no_projects: String,
-    #[serde(rename = "noProjectsHint")]
-    pub no_projects_hint: String,
-    #[serde(rename = "resetFilters")]
-    pub reset_filters: String,
     #[serde(rename = "technologiesTitle")]
     pub technologies_title: String,
-    #[serde(rename = "highlightsTitle")]
-    pub highlights_title: String,
     pub items: Vec<ProjectItem>,
 }
 
@@ -273,7 +234,6 @@ pub struct ProjectItem {
     pub code_url: Option<String>,
     #[serde(rename = "docsUrl", default)]
     pub docs_url: Option<String>,
-    pub status: String,
     #[serde(rename = "statusLabel")]
     pub status_label: String,
     pub date: String,
@@ -282,14 +242,11 @@ pub struct ProjectItem {
 #[derive(Debug, Deserialize)]
 pub struct Contact {
     pub title: String,
+    pub heading: String,
     pub description: String,
     pub intro: String,
     #[serde(rename = "channelHeading")]
     pub channel_heading: String,
-    #[serde(rename = "formChannel")]
-    pub form_channel: String,
-    #[serde(rename = "formChannelHint")]
-    pub form_channel_hint: String,
     pub form: ContactForm,
 }
 
@@ -310,7 +267,6 @@ pub struct Footer {
     pub impressum: String,
     pub privacy: String,
     pub copyright: String,
-    pub contact: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -416,9 +372,75 @@ pub struct StructuredPortfolio {
 
 #[derive(Debug, Deserialize)]
 pub struct NotFound {
+    pub eyebrow: String,
     pub title: String,
     pub message: String,
     pub back: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Basecamp {
+    pub page_title: String,
+    pub description: String,
+    pub focus_title: String,
+    pub focus: Vec<Principle>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct World {
+    pub scene_label: String,
+    pub intro: String,
+    pub loading: String,
+    pub dock_label: String,
+    pub overview: String,
+    pub land: String,
+    pub close: String,
+    pub collapse: String,
+    pub expand: String,
+    pub language_label: String,
+    pub mood_label: String,
+    pub moods: Moods,
+    pub islands: Islands,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Moods {
+    pub dusk: String,
+    pub night: String,
+    pub aurora: String,
+    pub peach: String,
+    pub day: String,
+}
+
+impl Moods {
+    pub fn label(&self, key: &str) -> Option<&str> {
+        let label = match key {
+            "dusk" => &self.dusk,
+            "night" => &self.night,
+            "aurora" => &self.aurora,
+            "peach" => &self.peach,
+            "day" => &self.day,
+            _ => return None,
+        };
+        Some(label)
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Islands {
+    pub basecamp: IslandCopy,
+    pub projects: IslandCopy,
+    pub about: IslandCopy,
+    pub experience: IslandCopy,
+    pub contact: IslandCopy,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct IslandCopy {
+    pub label: String,
+    pub meta: String,
 }
 
 #[cfg(test)]

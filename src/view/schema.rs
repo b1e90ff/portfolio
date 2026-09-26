@@ -3,6 +3,7 @@ use serde_json::{Value, json};
 
 use crate::i18n::Messages;
 use crate::state::AppState;
+use crate::view::world::Island;
 
 pub fn json_ld(value: &Value) -> Markup {
     let mut json = serde_json::to_string(value).unwrap_or_else(|_| "{}".into());
@@ -39,12 +40,13 @@ pub fn organization(state: &AppState, locale: &str, m: &Messages) -> Value {
 
 pub fn site_navigation(state: &AppState, locale: &str, m: &Messages) -> Value {
     let base = &state.settings.base_url;
-    let items: [(&str, &str); 4] = [
-        (&m.navigation.home, ""),
-        (&m.navigation.projects, "/projects"),
-        (&m.navigation.about, "/about"),
-        (&m.navigation.contact, "/contact"),
-    ];
+    let items: Vec<(&str, &str)> = Island::ALL
+        .iter()
+        .map(|island| match island {
+            Island::Overview => (m.navigation.home.as_str(), ""),
+            _ => (island.label(m), island.path()),
+        })
+        .collect();
 
     json!({
         "@context": "https://schema.org",

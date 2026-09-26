@@ -1,153 +1,41 @@
-use std::collections::BTreeSet;
-
 use maud::{Markup, PreEscaped, html};
 use serde_json::{Value, json};
 
 use crate::i18n::{Messages, ProjectItem};
 use crate::state::AppState;
 use crate::view::layout::asset;
-use crate::view::schema;
+use crate::view::world::{self, Island, PanelHead};
+use crate::view::{icons, schema};
 
-pub fn list_body(_state: &AppState, locale: &str, m: &Messages) -> Markup {
-    let statuses: BTreeSet<(&str, &str)> = m
-        .projects
-        .items
-        .iter()
-        .map(|p| (p.status.as_str(), p.status_label.as_str()))
-        .collect();
-    let technologies: BTreeSet<&str> = m
-        .projects
-        .items
-        .iter()
-        .flat_map(|p| p.technologies.iter().map(|s| s.as_str()))
-        .collect();
+pub fn list_body(locale: &str, m: &Messages) -> Markup {
+    panel(locale, m, false)
+}
 
-    let mut ordered: Vec<&ProjectItem> = m.projects.items.iter().collect();
-    ordered.sort_by(|a, b| b.date.cmp(&a.date));
-
+pub fn detail_body(locale: &str, m: &Messages, project: &ProjectItem) -> Markup {
     html! {
-        section class="container mx-auto px-4 pt-32 sm:pt-40 pb-16" {
-            div class="max-w-3xl mx-auto" {
-                header class="mb-10" {
-                    p class="t-caption mb-3" { (m.projects.title) }
-                    h1 class="t-h1 mb-4" {
-                        span class="text-aurora" { (m.projects.title) }
-                    }
-                    p class="t-lead" { (m.projects.description) }
-                }
-
-                div class="flex flex-col sm:flex-row flex-wrap gap-3 mb-6"
-                    data-projects-filters {
-                    input type="search"
-                          name="q"
-                          placeholder=(m.projects.search_placeholder)
-                          autocomplete="off"
-                          class="w-full sm:flex-1 px-4 py-2.5 rounded-full text-sm border border-[var(--border-subtle)] focus:outline-none focus:border-[var(--accent-warm)] transition-colors"
-                          style="background-color: var(--surface-1); color: var(--foreground);"
-                          data-projects-search;
-                    select name="status"
-                           class="w-full sm:w-auto px-4 py-2.5 rounded-full text-sm border border-[var(--border-subtle)] focus:outline-none focus:border-[var(--accent-warm)] transition-colors"
-                           style="background-color: var(--surface-1); color: var(--foreground);"
-                           data-projects-status {
-                        option value="" { (m.projects.status_all) }
-                        @for (value, label) in &statuses {
-                            option value=(value) { (label) }
-                        }
-                    }
-                    select name="technology"
-                           class="w-full sm:w-auto px-4 py-2.5 rounded-full text-sm border border-[var(--border-subtle)] focus:outline-none focus:border-[var(--accent-warm)] transition-colors"
-                           style="background-color: var(--surface-1); color: var(--foreground);"
-                           data-projects-technology {
-                        option value="" { (m.projects.technology_all) }
-                        @for tech in &technologies {
-                            option value=(tech) { (tech) }
-                        }
-                    }
-                    button type="button"
-                           class="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm text-[var(--text-secondary)] hover:text-[var(--foreground)] transition-colors"
-                           data-projects-reset { (m.projects.reset_filters) }
-                }
-
-                div class="space-y-4" data-projects-grid {
-                    @for project in &ordered {
-                        (project_card(locale, m, project))
-                    }
-                }
-
-                p class="t-lead text-center mt-12 hidden" data-projects-empty {
-                    (m.projects.no_projects) " " (m.projects.no_projects_hint)
-                }
-            }
-        }
+        (panel(locale, m, true))
+        (modal(locale, m, project))
     }
 }
 
-pub fn detail_body(_state: &AppState, locale: &str, m: &Messages, project: &ProjectItem) -> Markup {
-    html! {
-        section class="container mx-auto px-4 pt-32 sm:pt-40 pb-16" {
-            div class="max-w-3xl mx-auto" {
-                nav class="flex flex-wrap items-center gap-1.5 t-caption mb-6" aria-label="Breadcrumb" {
-                    a href=(format!("/{locale}")) class="hover:text-[var(--foreground)] transition-colors" { (m.navigation.home) }
-                    span aria-hidden="true" { "/" }
-                    a href=(format!("/{locale}/projects")) class="hover:text-[var(--foreground)] transition-colors" { (m.projects.title) }
-                    span aria-hidden="true" { "/" }
-                    span class="text-[var(--foreground)]" { (project.title) }
-                }
-
-                a href=(format!("/{locale}/projects"))
-                  class="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--foreground)] transition-colors mb-8" {
-                    (icon_arrow_left())
-                    span { (m.projects.back_to_projects) }
-                }
-
-                h1 class="t-h1 mb-4" {
-                    span class="text-aurora" { (project.title) }
-                }
-                p class="t-lead mb-10" { (project.description) }
-
-                figure class="aspect-video relative mb-12 rounded-xl overflow-hidden border border-[var(--border-subtle)]" {
-                    img src=(asset(&project.image))
-                        alt=(project.title)
-                        width="1280" height="720"
-                        loading="eager" decoding="async"
-                        class="w-full h-full object-cover";
-                }
-
-                section class="border-t border-[var(--border-subtle)] pt-8 mb-12" data-fade {
-                    p class="t-body whitespace-pre-line" { (project.extended_description) }
-                }
-
-                @if !project.technologies.is_empty() {
-                    section class="border-t border-[var(--border-subtle)] pt-8 mb-12" data-fade {
-                        h2 class="t-caption mb-4" { (m.projects.technologies_title) }
-                        div class="flex flex-wrap gap-1.5" {
-                            @for tech in &project.technologies {
-                                span class="px-2.5 py-1 text-xs rounded-md text-[var(--text-secondary)] border border-[var(--border-subtle)]" { (tech) }
-                            }
-                        }
-                    }
-                }
-
-                div class="flex flex-wrap gap-3 border-t border-[var(--border-subtle)] pt-8" {
-                    @if let Some(url) = &project.live_url {
-                        a href=(url) target="_blank" rel="noopener noreferrer" class="btn btn-primary" {
-                            (icon_external()) span { (m.projects.view_live) }
-                        }
-                    }
-                    @if let Some(url) = &project.code_url {
-                        a href=(url) target="_blank" rel="noopener noreferrer" class="btn btn-ghost" {
-                            (icon_external()) span { (m.projects.view_code) }
-                        }
-                    }
-                    @if let Some(url) = &project.docs_url {
-                        a href=(url) target="_blank" rel="noopener noreferrer" class="btn btn-ghost" {
-                            (icon_external()) span { (m.projects.view_docs) }
-                        }
-                    }
-                }
+fn panel(locale: &str, m: &Messages, behind_modal: bool) -> Markup {
+    let mut ordered: Vec<&ProjectItem> = m.projects.items.iter().collect();
+    ordered.sort_by(|a, b| b.date.cmp(&a.date));
+    let head = PanelHead {
+        id: Island::Projects.key(),
+        eyebrow: Island::Projects.label(m),
+        title: &m.projects.heading,
+        behind_modal,
+    };
+    let content = html! {
+        p class="lead" { (m.projects.description) }
+        ul class="projects" {
+            @for project in ordered {
+                li { (project_card(locale, m, project)) }
             }
         }
-    }
+    };
+    world::panel(locale, m, head, content)
 }
 
 pub fn list_extra_schemas(state: &AppState, locale: &str, m: &Messages) -> Vec<Value> {
@@ -173,7 +61,7 @@ pub fn list_extra_schemas(state: &AppState, locale: &str, m: &Messages) -> Vec<V
         schema::web_page(
             state,
             locale,
-            "/projects",
+            Island::Projects.path(),
             &m.projects.title,
             &m.projects.description,
             "CollectionPage",
@@ -184,7 +72,7 @@ pub fn list_extra_schemas(state: &AppState, locale: &str, m: &Messages) -> Vec<V
             locale,
             &[
                 (m.navigation.home.as_str(), ""),
-                (m.projects.title.as_str(), "/projects"),
+                (m.projects.title.as_str(), Island::Projects.path()),
             ],
         ),
         item_list,
@@ -233,7 +121,7 @@ pub fn detail_extra_schemas(
             locale,
             &[
                 (m.navigation.home.as_str(), ""),
-                (m.projects.title.as_str(), "/projects"),
+                (m.projects.title.as_str(), Island::Projects.path()),
                 (project.title.as_str(), &format!("/projects/{}", project.id)),
             ],
         ),
@@ -242,59 +130,68 @@ pub fn detail_extra_schemas(
 }
 
 fn project_card(locale: &str, m: &Messages, p: &ProjectItem) -> Markup {
-    let tech_data = p.technologies.join(",");
     html! {
-        article class="card card-interactive lift-on-hover overflow-hidden"
-                data-project-card
-                data-status=(p.status)
-                data-technologies=(tech_data)
-                data-title=(p.title.to_lowercase())
-                data-description=(p.description.to_lowercase()) {
-            div class="flex flex-col sm:flex-row gap-0 relative z-[2]" {
-                figure class="shrink-0 overflow-hidden sm:w-56 aspect-video sm:aspect-auto sm:self-stretch border-b sm:border-b-0 sm:border-r border-[var(--border-subtle)]" {
-                    img src=(asset(&p.image))
-                        alt=(p.title)
-                        width="448" height="252"
-                        loading="lazy" decoding="async"
-                        class="w-full h-full object-cover";
+        a class="card project" href=(format!("/{locale}/projects/{}", p.id)) data-nav
+          aria-label=(format!("{} – {}", p.title, m.projects.view_details)) {
+            img src=(asset(&p.image)) alt="" width="224" height="152" loading="lazy" decoding="async";
+            div {
+                h2 { (p.title) }
+                p { (p.description) }
+                (tags(p, 2))
+            }
+        }
+    }
+}
+
+fn tags(p: &ProjectItem, tech_limit: usize) -> Markup {
+    html! {
+        div class="tags" {
+            span class="tag tag-accent" { (p.date.get(..4).unwrap_or(&p.date)) }
+            span class="tag" { (p.status_label) }
+            @for tech in p.technologies.iter().take(tech_limit) {
+                span class="tag" { (tech) }
+            }
+        }
+    }
+}
+
+fn modal(locale: &str, m: &Messages, project: &ProjectItem) -> Markup {
+    let links = [
+        (&project.live_url, &m.projects.view_live),
+        (&project.code_url, &m.projects.view_code),
+        (&project.docs_url, &m.projects.view_docs),
+    ];
+    html! {
+        div class="modal" data-modal {
+            a class="modal-scrim" href=(Island::Projects.href(locale)) data-nav data-modal-close
+              tabindex="-1" aria-label=(m.world.close) {}
+            article class="modal-card glass" role="dialog" aria-modal="true" aria-labelledby="modal-title" {
+                a class="icon-btn glass" href=(Island::Projects.href(locale)) data-nav data-modal-close
+                  aria-label=(m.world.close) {
+                    (PreEscaped(icons::CLOSE))
                 }
-                div class="flex-1 p-5 min-w-0" {
-                    div class="flex items-baseline justify-between gap-3 mb-2" {
-                        a href=(format!("/{locale}/projects/{}", p.id))
-                          class="text-[var(--foreground)] font-semibold hover:text-[var(--accent-warm)] transition-colors" {
-                            (p.title)
-                        }
-                        span class="t-caption shrink-0" { (p.status_label) }
-                    }
-                    p class="t-small leading-relaxed mb-4" { (p.description) }
-                    @if !p.technologies.is_empty() {
-                        div class="flex flex-wrap gap-1.5 mb-4" {
-                            @for tech in &p.technologies {
-                                span class="px-2 py-0.5 text-[10px] rounded-md text-[var(--text-secondary)] border border-[var(--border-subtle)]" { (tech) }
+                div class="modal-scroll" {
+                    img src=(asset(&project.image)) alt="" width="1280" height="640" decoding="async";
+                    div class="modal-body" {
+                        (tags(project, 0))
+                        h1 #modal-title tabindex="-1" { (project.title) }
+                        p class="lead" { (project.extended_description) }
+                        @if !project.technologies.is_empty() {
+                            h2 class="section-title" { (m.projects.technologies_title) }
+                            div class="tags" {
+                                @for tech in &project.technologies { span class="tag" { (tech) } }
                             }
                         }
-                    }
-                    div class="flex flex-wrap gap-4 text-sm" {
-                        a href=(format!("/{locale}/projects/{}", p.id))
-                          class="inline-flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--accent-warm)] transition-colors" {
-                            (m.projects.view_details) (icon_arrow_right())
-                        }
-                        @if let Some(url) = &p.live_url {
-                            a href=(url) target="_blank" rel="noopener noreferrer"
-                              class="inline-flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--accent-warm)] transition-colors" {
-                                (m.projects.view_live) (icon_external())
+                        div class="actions" {
+                            @for (url, label) in links {
+                                @if let Some(url) = url {
+                                    a class="btn" href=(url) target="_blank" rel="noopener noreferrer" {
+                                        (label) (PreEscaped(icons::EXTERNAL))
+                                    }
+                                }
                             }
-                        }
-                        @if let Some(url) = &p.code_url {
-                            a href=(url) target="_blank" rel="noopener noreferrer"
-                              class="inline-flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--accent-warm)] transition-colors" {
-                                (m.projects.view_code) (icon_external())
-                            }
-                        }
-                        @if let Some(url) = &p.docs_url {
-                            a href=(url) target="_blank" rel="noopener noreferrer"
-                              class="inline-flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--accent-warm)] transition-colors" {
-                                (m.projects.view_docs) (icon_external())
+                            a class="btn btn-ghost" href=(Island::Projects.href(locale)) data-nav data-modal-close {
+                                (PreEscaped(icons::ARROW_LEFT)) (m.projects.back_to_projects)
                             }
                         }
                     }
@@ -302,18 +199,6 @@ fn project_card(locale: &str, m: &Messages, p: &ProjectItem) -> Markup {
             }
         }
     }
-}
-
-fn icon_arrow_right() -> Markup {
-    html! { (PreEscaped(r#"<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>"#)) }
-}
-
-fn icon_arrow_left() -> Markup {
-    html! { (PreEscaped(r#"<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>"#)) }
-}
-
-fn icon_external() -> Markup {
-    html! { (PreEscaped(r#"<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>"#)) }
 }
 
 pub fn find<'a>(m: &'a Messages, id: &str) -> Option<&'a ProjectItem> {

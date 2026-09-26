@@ -1,18 +1,20 @@
 use maud::{Markup, html};
 
 use crate::i18n::Messages;
+use crate::view::world::{self, Island, PanelHead};
 
 pub fn body(locale: &str, m: &Messages) -> Markup {
-    html! {
-        section class="relative min-h-[70vh] flex items-center justify-center px-4" {
-            div class="relative z-[2] max-w-md mx-auto text-center" {
-                p class="t-caption mb-6" { "404" }
-                h1 class="t-h1 mb-4" { span class="text-aurora" { (m.notfound.title) } }
-                p class="t-lead mb-10" { (m.notfound.message) }
-                a href=(format!("/{locale}")) class="btn btn-primary inline-flex" {
-                    (m.notfound.back)
-                }
-            }
+    let head = PanelHead {
+        id: "not-found",
+        eyebrow: &m.notfound.eyebrow,
+        title: &m.notfound.title,
+        ..PanelHead::default()
+    };
+    let content = html! {
+        p class="lead" { (m.notfound.message) }
+        div class="actions" {
+            a class="btn" href=(Island::Overview.href(locale)) data-nav { (m.notfound.back) }
         }
-    }
+    };
+    world::panel(locale, m, head, content)
 }

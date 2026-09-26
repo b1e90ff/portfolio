@@ -9,6 +9,9 @@
 target
 bin
 node_modules
+tests
+test-results
+playwright-report
 public/css/build.css
 public/css/main.css
 *.log

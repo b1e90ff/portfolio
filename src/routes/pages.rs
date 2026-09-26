@@ -1,10 +1,11 @@
 use axum::extract::{Path, State};
-use axum::http::StatusCode;
+use axum::http::{StatusCode, Uri};
 use axum::response::{IntoResponse, Response};
 use maud::Markup;
 
 use crate::locale::LocaleCtx;
 use crate::state::AppState;
+use crate::view::world::Island;
 use crate::view::{self, Page, layout};
 
 pub async fn home(State(state): State<AppState>, ctx: LocaleCtx) -> Markup {
@@ -16,9 +17,43 @@ pub async fn home(State(state): State<AppState>, ctx: LocaleCtx) -> Markup {
         "",
         m.hero.page_title.clone(),
         m.hero.description.clone(),
-        view::home::body(&state, &ctx.locale, m),
+        view::home::body(&ctx.locale, m),
     );
+    page.island = Some(Island::Overview);
     page.extra_schemas = view::home::extra_schemas(&state, &ctx.locale, m);
+    layout(page)
+}
+
+pub async fn basecamp(State(state): State<AppState>, ctx: LocaleCtx) -> Markup {
+    let m = ctx.messages.as_ref();
+    let mut page = Page::new(
+        &state,
+        &ctx.locale,
+        m,
+        Island::Basecamp.path(),
+        m.basecamp.page_title.clone(),
+        m.basecamp.description.clone(),
+        view::home::basecamp_body(&ctx.locale, m),
+    );
+    page.island = Some(Island::Basecamp);
+    page.og_type = "profile";
+    page.extra_schemas = view::home::basecamp_extra_schemas(&state, &ctx.locale, m);
+    layout(page)
+}
+
+pub async fn experience(State(state): State<AppState>, ctx: LocaleCtx) -> Markup {
+    let m = ctx.messages.as_ref();
+    let mut page = Page::new(
+        &state,
+        &ctx.locale,
+        m,
+        Island::Experience.path(),
+        m.experience.title.clone(),
+        m.experience.description.clone(),
+        view::experience::body(&ctx.locale, m),
+    );
+    page.island = Some(Island::Experience);
+    page.extra_schemas = view::experience::extra_schemas(&state, &ctx.locale, m);
     layout(page)
 }
 
@@ -28,11 +63,12 @@ pub async fn about(State(state): State<AppState>, ctx: LocaleCtx) -> Markup {
         &state,
         &ctx.locale,
         m,
-        "/about",
+        Island::About.path(),
         m.about.about_title.clone(),
         m.about.bio.content.clone(),
-        view::about::body(&state, &ctx.locale, m),
+        view::about::body(&ctx.locale, m),
     );
+    page.island = Some(Island::About);
     page.og_type = "profile";
     page.extra_schemas = view::about::extra_schemas(&state, &ctx.locale, m);
     layout(page)
@@ -44,11 +80,12 @@ pub async fn contact(State(state): State<AppState>, ctx: LocaleCtx) -> Markup {
         &state,
         &ctx.locale,
         m,
-        "/contact",
+        Island::Contact.path(),
         m.contact.title.clone(),
         m.contact.description.clone(),
-        view::contact::body(&state, &ctx.locale, m),
+        view::contact::body(&ctx.locale, m),
     );
+    page.island = Some(Island::Contact);
     page.extra_schemas = view::contact::extra_schemas(&state, &ctx.locale, m);
     layout(page)
 }
@@ -59,11 +96,12 @@ pub async fn projects_list(State(state): State<AppState>, ctx: LocaleCtx) -> Mar
         &state,
         &ctx.locale,
         m,
-        "/projects",
+        Island::Projects.path(),
         m.projects.title.clone(),
         m.projects.description.clone(),
-        view::projects::list_body(&state, &ctx.locale, m),
+        view::projects::list_body(&ctx.locale, m),
     );
+    page.island = Some(Island::Projects);
     page.extra_schemas = view::projects::list_extra_schemas(&state, &ctx.locale, m);
     layout(page)
 }
@@ -96,8 +134,9 @@ pub async fn project_detail(
         &path,
         project.title.clone(),
         project.description.clone(),
-        view::projects::detail_body(&state, &ctx.locale, m, project),
+        view::projects::detail_body(&ctx.locale, m, project),
     );
+    page.island = Some(Island::Projects);
     page.og_type = "article";
     page.og_image = Some(if project.image.starts_with("http") {
         project.image.clone()
@@ -117,7 +156,7 @@ pub async fn privacy(State(state): State<AppState>, ctx: LocaleCtx) -> Markup {
         "/privacy",
         m.privacy.title.clone(),
         m.footer.privacy.clone(),
-        view::legal::privacy_body(&state, &ctx.locale, m),
+        view::legal::privacy_body(&ctx.locale, m),
     );
     page.extra_schemas = view::legal::privacy_extra_schemas(&state, &ctx.locale, m);
     layout(page)
@@ -132,14 +171,19 @@ pub async fn impressum(State(state): State<AppState>, ctx: LocaleCtx) -> Markup 
         "/impressum",
         m.impressum.title.clone(),
         m.footer.impressum.clone(),
-        view::legal::impressum_body(&state, &ctx.locale, m),
+        view::legal::impressum_body(&ctx.locale, m),
     );
     page.extra_schemas = view::legal::impressum_extra_schemas(&state, &ctx.locale, m);
     layout(page)
 }
 
-pub async fn fallback_not_found(State(state): State<AppState>) -> Response {
-    let locale = state.settings.default_locale.clone();
+pub async fn fallback_not_found(State(state): State<AppState>, uri: Uri) -> Response {
+    let requested = uri.path().split('/').nth(1).unwrap_or_default();
+    let locale = if state.i18n.has(requested) {
+        requested.to_string()
+    } else {
+        state.settings.default_locale.clone()
+    };
     let messages = state.i18n.get(&locale);
     let m = messages.as_ref();
     let body = view::not_found::body(&locale, m);

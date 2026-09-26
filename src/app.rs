@@ -15,6 +15,7 @@ use tracing::Level;
 
 use crate::routes::{api, pages, seo};
 use crate::state::AppState;
+use crate::view::world::Island;
 
 pub fn router(state: AppState) -> Router {
     let client_ip_source = state.settings.client_ip_source.clone();
@@ -35,13 +36,24 @@ pub fn router(state: AppState) -> Router {
         let prefix = format!("/{locale}");
         pages_router = pages_router
             .route(&prefix, get(pages::home))
-            .route(&format!("{prefix}/about"), get(pages::about))
-            .route(&format!("{prefix}/projects"), get(pages::projects_list))
+            .route(
+                &island_route(&prefix, Island::Basecamp),
+                get(pages::basecamp),
+            )
+            .route(&island_route(&prefix, Island::About), get(pages::about))
+            .route(
+                &island_route(&prefix, Island::Experience),
+                get(pages::experience),
+            )
+            .route(
+                &island_route(&prefix, Island::Projects),
+                get(pages::projects_list),
+            )
             .route(
                 &format!("{prefix}/projects/{{id}}"),
                 get(pages::project_detail),
             )
-            .route(&format!("{prefix}/contact"), get(pages::contact))
+            .route(&island_route(&prefix, Island::Contact), get(pages::contact))
             .route(
                 &format!("{prefix}/opengraph-image"),
                 get(seo::opengraph_image),
@@ -64,6 +76,14 @@ pub fn router(state: AppState) -> Router {
         .fallback_service(serve_dir("assets/fonts"))
         .layer(immutable_cache());
 
+    let vendor = Router::new()
+        .fallback_service(serve_dir("public/vendor"))
+        .layer(immutable_cache());
+
+    let scripts = Router::new()
+        .fallback_service(serve_dir("public/js"))
+        .layer(revalidate_cache());
+
     let not_found_router = Router::new()
         .fallback(pages::fallback_not_found)
         .with_state(state.clone());
@@ -80,6 +100,8 @@ pub fn router(state: AppState) -> Router {
         .nest("/images", images)
         .nest("/css", css)
         .nest("/fonts", fonts)
+        .nest("/vendor", vendor)
+        .nest("/js", scripts)
         .fallback_service(public_assets)
         .layer(client_ip_source.into_extension())
         .layer(SetResponseHeaderLayer::if_not_present(
@@ -109,6 +131,10 @@ pub fn router(state: AppState) -> Router {
         .layer(TraceLayer::new_for_http().make_span_with(DefaultMakeSpan::new().level(Level::INFO)))
 }
 
+fn island_route(prefix: &str, island: Island) -> String {
+    format!("{prefix}{}", island.path())
+}
+
 fn serve_dir(path: &str) -> ServeDir {
     ServeDir::new(path)
         .precompressed_gzip()
@@ -121,6 +147,11 @@ fn immutable_cache() -> SetResponseHeaderLayer<HeaderValue> {
         CACHE_CONTROL,
         HeaderValue::from_static("public, max-age=31536000, immutable"),
     )
+}
+
+// Module imports carry no version query, so browsers must revalidate them on every load.
+fn revalidate_cache() -> SetResponseHeaderLayer<HeaderValue> {
+    SetResponseHeaderLayer::if_not_present(CACHE_CONTROL, HeaderValue::from_static("no-cache"))
 }
 
 fn short_cache() -> SetResponseHeaderLayer<HeaderValue> {
@@ -148,6 +179,7 @@ mod tests {
     use crate::config::Settings;
     use crate::i18n::I18n;
     use crate::rate_limit::RateLimitConfig;
+    use crate::view::layout::{THREE_VENDOR, stylesheet_href};
     use axum::body::Body;
     use axum::extract::ConnectInfo;
     use axum::http::request::Builder;
@@ -290,7 +322,7 @@ mod tests {
         let (status, body) = get(test_app(), "/de-DE").await;
         assert_eq!(status, StatusCode::OK);
         assert!(body.contains(r#"lang="de-DE""#));
-        assert!(body.contains("Architektur, die hält"));
+        assert!(body.contains("zuverlässig betrieben wird"));
     }
 
     #[tokio::test]
@@ -331,6 +363,98 @@ mod tests {
         assert_eq!(h.get("x-content-type-options").unwrap(), "nosniff");
         assert!(h.contains_key("referrer-policy"));
         assert!(h.contains_key("permissions-policy"));
+    }
+
+    #[tokio::test]
+    async fn island_pages_render_their_panel() {
+        for (path, island) in [
+            ("/de-DE/basecamp", "basecamp"),
+            ("/de-DE/projects", "projects"),
+            ("/de-DE/about", "about"),
+            ("/de-DE/experience", "experience"),
+            ("/de-DE/contact", "contact"),
+        ] {
+            let (status, body) = get(test_app(), path).await;
+            assert_eq!(status, StatusCode::OK, "{path}");
+            assert!(
+                body.contains(&format!(r#"data-panel="{island}""#)),
+                "{path}"
+            );
+            assert!(body.contains(r#"aria-controls="panel-scroll""#), "{path}");
+            assert!(
+                body.contains(&format!(r#"data-island="{island}" aria-current="page""#)),
+                "{path}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn project_detail_opens_modal_over_project_list() {
+        let (status, body) = get(test_app(), "/en-US/projects/portfolio").await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(body.contains(r#"data-panel="projects""#));
+        assert!(body.contains("data-modal"));
+        assert!(body.contains(r#"data-panel="projects" inert"#));
+        assert!(body.contains(r#"<h2 id="panel-title">"#));
+        assert!(body.contains(r#"<h1 id="modal-title""#));
+        assert!(body.contains(r#"href="/en-US/projects" data-nav data-modal-close"#));
+    }
+
+    #[tokio::test]
+    async fn legal_pages_mark_no_island_as_current() {
+        for path in ["/de-DE/privacy", "/de-DE/impressum"] {
+            let (status, body) = get(test_app(), path).await;
+            assert_eq!(status, StatusCode::OK, "{path}");
+            assert!(body.contains(r#"data-island="overview""#), "{path}");
+            assert!(!body.contains(r#"aria-current="page""#), "{path}");
+        }
+    }
+
+    #[tokio::test]
+    async fn unknown_path_renders_not_found_in_requested_locale() {
+        let (status, body) = get(test_app(), "/de-DE/does-not-exist").await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        assert!(body.contains(r#"lang="de-DE""#));
+        assert!(body.contains("Verlaufen?"));
+    }
+
+    #[tokio::test]
+    async fn vendored_assets_are_cached_immutably() {
+        let res = test_app()
+            .oneshot(
+                Request::builder()
+                    .uri(format!("{THREE_VENDOR}/three.module.js"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+        assert_eq!(
+            res.headers()["cache-control"],
+            "public, max-age=31536000, immutable"
+        );
+    }
+
+    #[tokio::test]
+    async fn layout_links_the_versioned_stylesheet() {
+        let (_, body) = get(test_app(), "/en-US").await;
+        assert!(body.contains(&format!(r#"href="{}""#, stylesheet_href())));
+    }
+
+    #[tokio::test]
+    async fn scripts_are_revalidated() {
+        let res = test_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/js/world/world.js")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+        assert_eq!(res.headers()["cache-control"], "no-cache");
     }
 
     #[tokio::test]

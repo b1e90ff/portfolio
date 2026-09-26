@@ -5,3 +5,6 @@
 *.ico   binary
 *.ttf   binary
 *.woff2 binary
+*.glb   binary
+
+public/vendor/** linguist-vendored

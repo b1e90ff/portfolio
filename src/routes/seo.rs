@@ -9,12 +9,15 @@ use serde_json::json;
 use crate::locale::LocaleCtx;
 use crate::og;
 use crate::state::AppState;
+use crate::view::world::Island;
 
 const STATIC_PATHS: &[(&str, &str, &str)] = &[
-    ("", "1.0", "weekly"),
-    ("/about", "0.8", "monthly"),
-    ("/projects", "0.9", "weekly"),
-    ("/contact", "0.8", "monthly"),
+    (Island::Overview.path(), "1.0", "weekly"),
+    (Island::Basecamp.path(), "0.8", "monthly"),
+    (Island::About.path(), "0.8", "monthly"),
+    (Island::Experience.path(), "0.8", "monthly"),
+    (Island::Projects.path(), "0.9", "weekly"),
+    (Island::Contact.path(), "0.8", "monthly"),
     ("/privacy", "0.3", "yearly"),
     ("/impressum", "0.3", "yearly"),
 ];
@@ -280,7 +283,9 @@ mod tests {
         for locale in ["en-US", "de-DE"] {
             for path in [
                 "",
+                "/basecamp",
                 "/about",
+                "/experience",
                 "/projects",
                 "/contact",
                 "/privacy",
