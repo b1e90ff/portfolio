@@ -76,6 +76,7 @@ function swapMain(doc) {
         if (modal) main.append(document.importNode(modal, true));
     } else {
         main.replaceChildren(...[...next.childNodes].map((n) => document.importNode(n, true)));
+        world?.setPanelCollapsed(false);
         const panel = main.querySelector('[data-panel]');
         if (panel && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
             panel.classList.add('is-entering');
@@ -122,6 +123,16 @@ function viewOf(main) {
     return island === 'overview' && main.querySelector('[data-panel]') ? 'overview-aside' : island;
 }
 
+function setCollapsed(panel, collapsed) {
+    panel.classList.toggle('is-collapsed', collapsed);
+    const toggle = panel.querySelector('[data-panel-toggle]');
+    const label = collapsed ? toggle.dataset.labelExpand : toggle.dataset.labelCollapse;
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+    toggle.setAttribute('aria-label', label);
+    toggle.title = label;
+    world?.setPanelCollapsed(collapsed);
+}
+
 function islandHref(key) {
     return document.querySelector(`.dock a[data-island="${key}"]`)?.href;
 }
@@ -134,6 +145,11 @@ function initNavigation() {
         e.preventDefault();
         if (link.closest('.projects')) modalOpener = link.getAttribute('href');
         if (link.href !== location.href) navigate(link.href);
+    });
+    document.addEventListener('click', (e) => {
+        const toggle = e.target.closest('[data-panel-toggle]');
+        const panel = toggle?.closest('[data-panel]');
+        if (panel) setCollapsed(panel, !panel.classList.contains('is-collapsed'));
     });
     document.addEventListener('pointerover', (e) => {
         const link = e.target.closest('a[data-nav]');

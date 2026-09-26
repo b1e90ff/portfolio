@@ -220,6 +220,8 @@
     "overview": "Overview",
     "land": "Land",
     "close": "Close",
+    "collapse": "Collapse panel",
+    "expand": "Expand panel",
     "languageLabel": "Language",
     "moodLabel": "Mood",
     "moods": {

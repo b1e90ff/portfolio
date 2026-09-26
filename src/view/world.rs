@@ -111,12 +111,20 @@ pub fn panel(locale: &str, m: &Messages, head: PanelHead<'_>, content: Markup) -
                         h1 #panel-title tabindex="-1" { (head.title) }
                     }
                 }
-                a class="chip glass" href=(Island::Overview.href(locale)) data-nav {
-                    (PreEscaped(icons::ARROW_LEFT))
-                    span { (m.world.overview) }
+                div class="panel-actions" {
+                    button type="button" class="chip glass panel-toggle" data-panel-toggle
+                           aria-expanded="true" aria-controls="panel-scroll"
+                           aria-label=(m.world.collapse) title=(m.world.collapse)
+                           data-label-collapse=(m.world.collapse) data-label-expand=(m.world.expand) {
+                        (PreEscaped(icons::CHEVRON))
+                    }
+                    a class="chip glass" href=(Island::Overview.href(locale)) data-nav {
+                        (PreEscaped(icons::ARROW_LEFT))
+                        span { (m.world.overview) }
+                    }
                 }
             }
-            div class="panel-scroll" {
+            div #panel-scroll class="panel-scroll" {
                 div class="panel-body" { (content) }
                 (footer(locale, m))
             }

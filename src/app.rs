@@ -366,6 +366,7 @@ mod tests {
                 body.contains(&format!(r#"data-panel="{island}""#)),
                 "{path}"
             );
+            assert!(body.contains(r#"aria-controls="panel-scroll""#), "{path}");
             assert!(
                 body.contains(&format!(r#"data-island="{island}" aria-current="page""#)),
                 "{path}"

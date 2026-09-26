@@ -220,6 +220,8 @@
     "overview": "Übersicht",
     "land": "Landen",
     "close": "Schliessen",
+    "collapse": "Panel einklappen",
+    "expand": "Panel ausklappen",
     "languageLabel": "Sprache",
     "moodLabel": "Stimmung",
     "moods": {

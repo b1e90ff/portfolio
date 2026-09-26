@@ -594,6 +594,22 @@
         margin: 0;
     }
 
+    .panel-actions {
+        flex: none;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .chip.panel-toggle {
+        display: none;
+        padding: 7px;
+    }
+
+    .panel-toggle svg {
+        transition: transform .25s var(--ease-out);
+    }
+
     .chip {
         position: relative;
         flex: none;
@@ -1261,6 +1277,24 @@
 
         .panel-head :is(h1, h2) {
             font-size: 24px;
+        }
+
+        .world-ready .chip.panel-toggle {
+            display: grid;
+            place-items: center;
+        }
+
+        .panel.is-collapsed .panel-scroll {
+            display: none;
+        }
+
+        .panel.is-collapsed .panel-head {
+            border-bottom: 0;
+            padding-bottom: 18px;
+        }
+
+        .panel.is-collapsed .panel-toggle svg {
+            transform: rotate(180deg);
         }
 
         .panel-scroll {

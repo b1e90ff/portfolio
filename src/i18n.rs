@@ -397,6 +397,8 @@ pub struct World {
     pub overview: String,
     pub land: String,
     pub close: String,
+    pub collapse: String,
+    pub expand: String,
     pub language_label: String,
     pub mood_label: String,
     pub moods: Moods,
