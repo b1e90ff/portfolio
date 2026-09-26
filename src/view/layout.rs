@@ -1,3 +1,5 @@
+use std::fs;
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::LazyLock;
 
 use maud::{DOCTYPE, Markup, PreEscaped, html};
@@ -134,7 +136,7 @@ pub fn layout(p: Page<'_>) -> Markup {
                 link rel="manifest" href="/site.webmanifest";
 
                 link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin;
-                link rel="stylesheet" href=(asset("/css/main.css"));
+                link rel="stylesheet" href=(stylesheet_href());
 
                 script { (PreEscaped(mood_init())) }
                 script type="importmap" { (PreEscaped(import_map)) }
@@ -169,6 +171,26 @@ fn templated(template: &str, title: &str) -> String {
     }
 }
 
+// The stylesheet is cached immutably, so its URL must change whenever its content does.
+pub fn stylesheet_href() -> &'static str {
+    static HREF: LazyLock<String> = LazyLock::new(|| match fs::read(STYLESHEET) {
+        Ok(bytes) => format!("/css/main.css?v={}", content_version(&bytes)),
+        Err(err) => {
+            tracing::warn!(%err, path = STYLESHEET, "stylesheet unreadable, falling back to version query");
+            asset("/css/main.css")
+        }
+    });
+    &HREF
+}
+
+fn content_version(bytes: &[u8]) -> String {
+    let mut hasher = DefaultHasher::new();
+    bytes.hash(&mut hasher);
+    format!("{:016x}", hasher.finish())
+}
+
+const STYLESHEET: &str = "public/css/main.css";
+
 fn mood_init() -> &'static str {
     static SCRIPT: LazyLock<String> = LazyLock::new(|| {
         let moods = nav::MOODS.join("|");
@@ -177,4 +199,18 @@ fn mood_init() -> &'static str {
         )
     });
     &SCRIPT
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn content_version_changes_with_content() {
+        let a = content_version(b"body { color: red }");
+        assert_eq!(a.len(), 16);
+        assert!(a.chars().all(|c| c.is_ascii_hexdigit()));
+        assert_eq!(a, content_version(b"body { color: red }"));
+        assert_ne!(a, content_version(b"body { color: blue }"));
+    }
 }

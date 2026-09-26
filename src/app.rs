@@ -165,7 +165,7 @@ mod tests {
     use crate::config::Settings;
     use crate::i18n::I18n;
     use crate::rate_limit::RateLimitConfig;
-    use crate::view::layout::THREE_VENDOR;
+    use crate::view::layout::{THREE_VENDOR, stylesheet_href};
     use axum::body::Body;
     use axum::extract::ConnectInfo;
     use axum::http::request::Builder;
@@ -419,6 +419,12 @@ mod tests {
             res.headers()["cache-control"],
             "public, max-age=31536000, immutable"
         );
+    }
+
+    #[tokio::test]
+    async fn layout_links_the_versioned_stylesheet() {
+        let (_, body) = get(test_app(), "/en-US").await;
+        assert!(body.contains(&format!(r#"href="{}""#, stylesheet_href())));
     }
 
     #[tokio::test]
