@@ -66,7 +66,7 @@ pub fn basecamp_body(locale: &str, m: &Messages) -> Markup {
 
 pub fn extra_schemas(state: &AppState, locale: &str, m: &Messages) -> Vec<Value> {
     vec![
-        schema::person(state, m, &m.skills),
+        schema::person(state, m, &m.skills.flattened()),
         schema::website(state, m),
         schema::portfolio(state, locale, m),
         schema::web_page(

@@ -885,7 +885,7 @@
         box-shadow: 0 0 0 4px rgb(226 190 106 / .18);
     }
 
-    .timeline h2 {
+    .timeline h3 {
         margin-top: 8px;
     }
 
@@ -893,6 +893,25 @@
         margin-bottom: 6px;
         font-weight: 600;
         color: var(--accent-ink);
+    }
+
+    .stack {
+        display: grid;
+        gap: 14px;
+    }
+
+    .stack-more {
+        margin: 0;
+        font-size: 13px;
+        font-style: italic;
+        color: var(--muted);
+    }
+
+    .stack-group h3 {
+        margin: 0 0 6px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--muted);
     }
 
     .form {

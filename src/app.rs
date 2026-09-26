@@ -389,6 +389,32 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn experience_page_lists_the_tech_stack() {
+        let (status, body) = get(test_app(), "/de-DE/experience").await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(body.contains("Tech-Stack"));
+        assert!(body.contains("Plattform &amp; CI/CD"));
+        assert!(body.contains(r#"<span class="tag">Kubernetes</span>"#));
+        assert!(body.contains(r#"<span class="tag">Cloud Armor</span>"#));
+        let stack = body.find(r#"class="stack""#).unwrap();
+        let roles = body.find(r#"class="timeline""#).unwrap();
+        assert!(stack < roles, "tech stack renders above the roles");
+    }
+
+    #[tokio::test]
+    async fn home_structured_data_lists_skills_from_every_group() {
+        let (_, body) = get(test_app(), "/en-US").await;
+        let person = body
+            .match_indices(r#""knowsAbout":["#)
+            .map(|(start, _)| &body[start..start + body[start..].find(']').unwrap()])
+            .find(|list| list.contains(r#""Java""#))
+            .expect("person knowsAbout lists skills");
+        for skill in ["Cloud Armor", "OpenTelemetry"] {
+            assert!(person.contains(&format!(r#""{skill}""#)), "{skill}");
+        }
+    }
+
+    #[tokio::test]
     async fn project_detail_opens_modal_over_project_list() {
         let (status, body) = get(test_app(), "/en-US/projects/portfolio").await;
         assert_eq!(status, StatusCode::OK);

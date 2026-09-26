@@ -79,7 +79,7 @@ pub struct Messages {
     pub navigation: Navigation,
     pub hero: Hero,
     pub about: About,
-    pub skills: Vec<String>,
+    pub skills: Skills,
     pub experience: Experience,
     pub projects: Projects,
     pub contact: Contact,
@@ -183,9 +183,33 @@ pub struct Interests {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct Skills {
+    pub title: String,
+    pub more: String,
+    pub categories: Vec<SkillCategory>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SkillCategory {
+    pub name: String,
+    pub skills: Vec<String>,
+}
+
+impl Skills {
+    pub fn flattened(&self) -> Vec<String> {
+        self.categories
+            .iter()
+            .flat_map(|c| c.skills.iter().cloned())
+            .collect()
+    }
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Experience {
     pub title: String,
     pub heading: String,
+    #[serde(rename = "rolesTitle")]
+    pub roles_title: String,
     pub description: String,
     pub items: Vec<ExperienceItem>,
 }
@@ -445,6 +469,8 @@ pub struct IslandCopy {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use super::*;
 
     #[test]
@@ -461,6 +487,19 @@ mod tests {
         let i18n = I18n::load(&["en-US".to_string()], "en-US").unwrap();
         let m = i18n.get("xx-XX");
         assert!(!m.navigation.home.is_empty());
+    }
+
+    #[test]
+    fn skills_flatten_in_category_order() {
+        let i18n = I18n::load(&["en-US".to_string()], "en-US").unwrap();
+        let skills = &i18n.get("en-US").skills;
+        assert!(!skills.categories.is_empty());
+        assert!(skills.categories.iter().all(|c| !c.skills.is_empty()));
+        let flat = skills.flattened();
+        let unique: HashSet<&String> = flat.iter().collect();
+        assert_eq!(unique.len(), flat.len(), "a skill appears in two groups");
+        let last = skills.categories.last().and_then(|c| c.skills.last());
+        assert_eq!(flat.last(), last);
     }
 
     #[test]
