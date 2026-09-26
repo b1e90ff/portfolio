@@ -22,9 +22,16 @@ Every route renders a complete page: an overview intro or a content panel, the i
 | Path | Contents |
 |---|---|
 | `public/js/world/engine.js` | Renderer, sky, lighting moods, camera rig, terrain |
-| `public/js/world/props.js` | Props, dogs and their steering |
+| `public/js/world/buildings.js` | House, mast, shed, campfire, bridge and other structures |
+| `public/js/world/dogs.js` | Dog models, steering, play and fetch behaviour |
+| `public/js/world/walk.js` | Walkable areas, collision resolve, bridge height, detours |
+| `public/js/world/nature.js` | Trees, tufts and procedural cliff rocks |
+| `public/js/world/water.js` | Waterfalls and streams |
+| `public/js/world/airship.js` | Circling airship |
+| `public/js/world/props.js` | Re-exports the prop modules for scenes |
 | `public/js/world/scenes.js` | Island compositions |
-| `public/js/world/world.js` | Island layout, flights, pins, picking |
+| `public/js/world/camera.js` | Island layout and camera framing (pure) |
+| `public/js/world/world.js` | Flights, pins, picking |
 | `styles/main.css` | Mood tokens and frosted-glass components |
 
 ## Quick Start
