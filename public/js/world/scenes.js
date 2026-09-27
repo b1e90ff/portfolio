@@ -46,12 +46,15 @@ export function basecamp(ctx, o) {
     const bridge = { x: (sx + ex) / 2, z: (sz + ez) / 2, sx: streamX, sz: streamZ, cx: -streamZ, cz: streamX, halfLength: .6, halfWidth: .3, height: .22 };
     const barrier = { ax: sx, az: sz, bx: ex, bz: ez, gapFrom: 4.5 / 12, gapTo: 7.5 / 12, gapX: bridge.x, gapZ: bridge.z };
 
-    P.house(ctx, g, -1.25, U.top, -1.35, .35);
-    P.mast(ctx, g, .2, U.top, -2.1);
+    const HOUSE = { x: -1.25, z: -1.35 };
+    const MAST = { x: .2, z: -2.1 };
+    const PLATEAU_LANTERN = { x: -.2, z: -.35 };
+    P.house(ctx, g, HOUSE.x, U.top, HOUSE.z, .35);
+    P.mast(ctx, g, MAST.x, U.top, MAST.z);
     const [hx, hz] = at(T.fn, T.c, -.4, 1.05);
     const shedYaw = -.75;
     const shed = P.shed(ctx, g, hx, T.top, hz, shedYaw);
-    const nearShed = (x, z) => Math.hypot(x - hx, z - hz) < 1.7;
+    const nearShed = (x, z) => Math.hypot(x - hx, z - hz) < 1.2;
     const door = shed.userData.door;
     for (const [k, jitter] of [[.3, .15], [.72, -.2], [1.14, .1]]) {
         ctx.place('nature/path_stone', door.x, .005, door.z + k, jitter, .6, shed);
@@ -70,8 +73,8 @@ export function basecamp(ctx, o) {
         || Math.hypot(x + .3, z - 1.9) < 1.1
         || Math.hypot(x - fx, z - fz) < 1.35
         || nearShed(x, z));
-    const plateauProps = [[-1.25, -1.35, 1.25], [.2, -2.1, .5], [-.2, -.35, .25]];
-    P.tufts(ctx, g, U, 7, .9, (x, z) => plateauProps.some(([px, pz, r]) => Math.hypot(x - px, z - pz) < r));
+    const plateauProps = [[HOUSE, 1.25], [MAST, .5], [PLATEAU_LANTERN, .25]];
+    P.tufts(ctx, g, U, 7, .9, (x, z) => plateauProps.some(([p, r]) => Math.hypot(x - p.x, z - p.z) < r));
     for (const [x, z, ry] of [[-.6, -.45, .3], [0, -.2, .6]]) ctx.place('nature/path_stone', x, U.top + .005, z, ry, 1, g);
     for (const [x, z, ry] of [[-1.3, 1.1, .5], [-.4, 1.2, .1], [.4, 1.25, -.2]]) ctx.place('nature/path_stone', x, T.top + .005, z, ry, 1, g);
 
@@ -83,7 +86,7 @@ export function basecamp(ctx, o) {
     }
     ctx.place('survival/barrel', fx - .55, T.top, fz - .8, 0, 1.6, g);
     occ.push({ x: fx - .55, z: fz - .8, r: .22 });
-    for (const [x, y, z] of [[.35, T.top, 2.6], [-.2, U.top, -.35], [-2.6, T.top, .55]]) P.lantern(ctx, g, x, y, z);
+    for (const [x, y, z] of [[.35, T.top, 2.6], [PLATEAU_LANTERN.x, U.top, PLATEAU_LANTERN.z], [-2.6, T.top, .55]]) P.lantern(ctx, g, x, y, z);
 
     const ares = P.golden(ctx, g, -.1, T.top, 1.7, 0, .8);
     const cardea = P.husky(ctx, g, -.8, T.top, 2.3, 0, .9);
