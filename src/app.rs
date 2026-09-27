@@ -404,13 +404,22 @@ mod tests {
     #[tokio::test]
     async fn home_structured_data_lists_skills_from_every_group() {
         let (_, body) = get(test_app(), "/en-US").await;
+        let i18n = I18n::load(&["en-US".to_string()], "en-US").unwrap();
+        let categories = &i18n.get("en-US").skills.categories;
+        let first = format!(r#""{}""#, categories[0].skills[0]);
         let person = body
             .match_indices(r#""knowsAbout":["#)
             .map(|(start, _)| &body[start..start + body[start..].find(']').unwrap()])
-            .find(|list| list.contains(r#""Java""#))
+            .find(|list| list.contains(&first))
             .expect("person knowsAbout lists skills");
-        for skill in ["Cloud Armor", "OpenTelemetry"] {
-            assert!(person.contains(&format!(r#""{skill}""#)), "{skill}");
+        for category in categories {
+            for skill in &category.skills {
+                assert!(
+                    person.contains(&format!(r#""{skill}""#)),
+                    "{}: {skill}",
+                    category.name
+                );
+            }
         }
     }
 

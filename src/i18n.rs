@@ -498,6 +498,9 @@ mod tests {
         let flat = skills.flattened();
         let unique: HashSet<&String> = flat.iter().collect();
         assert_eq!(unique.len(), flat.len(), "a skill appears in two groups");
+        let total: usize = skills.categories.iter().map(|c| c.skills.len()).sum();
+        assert_eq!(flat.len(), total, "a group was skipped");
+        assert_eq!(flat.first(), skills.categories[0].skills.first());
         let last = skills.categories.last().and_then(|c| c.skills.last());
         assert_eq!(flat.last(), last);
     }
