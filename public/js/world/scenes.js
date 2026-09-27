@@ -50,12 +50,13 @@ export function basecamp(ctx, o) {
     P.mast(ctx, g, .2, U.top, -2.1);
     const [hx, hz] = at(T.fn, T.c, -.4, 1.05);
     const shedYaw = -.75;
-    P.shed(ctx, g, hx, T.top, hz, shedYaw);
+    const shed = P.shed(ctx, g, hx, T.top, hz, shedYaw);
     const nearShed = (x, z) => Math.hypot(x - hx, z - hz) < 1.2;
-    const doorX = hx - .28 * Math.cos(shedYaw) + .38 * Math.sin(shedYaw);
-    const doorZ = hz + .28 * Math.sin(shedYaw) + .38 * Math.cos(shedYaw);
-    for (const [k, ry] of [[.3, .4], [.62, -.2], [.95, .7]]) {
-        ctx.place('nature/path_stone', doorX + Math.sin(shedYaw) * k, T.top + .005, doorZ + Math.cos(shedYaw) * k, ry, .9, g);
+    const { x: dx, z: dz } = shed.userData.door;
+    const doorX = hx + dx * Math.cos(shedYaw) + dz * Math.sin(shedYaw);
+    const doorZ = hz - dx * Math.sin(shedYaw) + dz * Math.cos(shedYaw);
+    for (const [k, jitter] of [[.3, .15], [.68, -.2], [1.05, .1]]) {
+        ctx.place('nature/path_stone', doorX + Math.sin(shedYaw) * k, T.top + .005, doorZ + Math.cos(shedYaw) * k, shedYaw + jitter, .6, g);
     }
     occ.push({ x: hx, z: hz, r: .7 });
     P.woodBridge(ctx, g, bridge, T.top);

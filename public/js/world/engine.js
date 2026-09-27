@@ -45,7 +45,8 @@ export function createStage(canvas, opts) {
     sun.shadow.radius = 3;
     Object.assign(sun.shadow.camera, { left: -18, right: 18, top: 18, bottom: -18, near: 1, far: 60 });
     sun.shadow.bias = -.0004;
-    sun.shadow.normalBias = .02;
+    // Islands bob through the shadow map; a larger normal bias stops foliage acne from shimmering.
+    sun.shadow.normalBias = .05;
     const warm = new THREE.DirectionalLight(0xffc27a);
     warm.position.set(7, 5, 8);
     const world = new THREE.Group();
