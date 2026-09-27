@@ -2,8 +2,8 @@ apiVersion: v2
 name: portfolio-service
 description: Portfolio Web Service
 type: application
-version: 2.0.0
-appVersion: "2.0.0"
+version: 2.1.0
+appVersion: "2.1.0"
 icon: https://tat.systems/favicon.ico
 dependencies:
   - name: web-service
