@@ -108,15 +108,15 @@ export function createStage(canvas, opts) {
         slot.scale.setScalar(s);
         parent.add(slot);
         ctx.track(load(path).then((model) => {
-            if (model) slot.add(prepare(model.clone(true)));
+            if (model) slot.add(prepare(model.clone(true), slot.userData.receiveShadow !== false));
         }));
         return slot;
     };
-    const prepare = (o) => {
+    const prepare = (o, receiveShadow) => {
         o.traverse((m) => {
             if (!m.isMesh) return;
             m.castShadow = true;
-            m.receiveShadow = true;
+            m.receiveShadow = receiveShadow;
             [].concat(m.material).forEach((mt) => {
                 if (!mt.color || mt.userData.graded) return;
                 mt.userData.graded = true;

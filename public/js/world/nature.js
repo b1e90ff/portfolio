@@ -12,7 +12,9 @@ export function trees(ctx, parent, lvl, angles, inset = .45, scale = 1, avoid = 
         const [x, z] = at(lvl.fn, lvl.c, a, inset + (i % 2) * .25);
         if (avoid(x, z)) continue;
         parent.userData.reserve?.(x, z, .22 * scale);
-        ctx.place(PINES[i % PINES.length], x, lvl.top, z, a * 7, scale * (1 + (i % 3) * .15), parent);
+        const tree = ctx.place(PINES[i % PINES.length], x, lvl.top, z, a * 7, scale * (1 + (i % 3) * .15), parent);
+        // Bobbing islands drag foliage across the fixed shadow texel grid, which shimmers.
+        tree.userData.receiveShadow = false;
     }
 }
 
