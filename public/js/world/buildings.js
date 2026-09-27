@@ -77,7 +77,8 @@ export function shed(ctx, parent, x, y, z, ry = 0) {
     parent.add(s);
     ctx.add(new THREE.BoxGeometry(1, .75, .75), ctx.flat('#3b4250'), 0, .375, 0, s);
     ctx.add(new THREE.BoxGeometry(1.12, .08, .9), ctx.flat('#262a33'), 0, .79, 0, s).rotation.x = .08;
-    ctx.add(new THREE.BoxGeometry(.3, .5, .02), ctx.flat('#262a33'), -.28, .25, .38, s);
+    const door = ctx.add(new THREE.BoxGeometry(.3, .5, .02), ctx.flat('#262a33'), -.28, .25, .38, s);
+    s.userData.door = door.position;
     for (let i = 0; i < 4; i++) {
         const led = ctx.add(new THREE.BoxGeometry(.05, .03, .02), ctx.emissive(i % 2 ? '#6fd08c' : '#e2be6a', 2.5), .08 + i * .08, .55, .385, s);
         ctx.blinkers.push({ m: led, rate: .006 + i * .0013, ph: i * 1.7 });

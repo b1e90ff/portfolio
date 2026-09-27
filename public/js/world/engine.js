@@ -45,7 +45,8 @@ export function createStage(canvas, opts) {
     sun.shadow.radius = 3;
     Object.assign(sun.shadow.camera, { left: -18, right: 18, top: 18, bottom: -18, near: 1, far: 60 });
     sun.shadow.bias = -.0004;
-    sun.shadow.normalBias = .02;
+    // Islands bob through the shadow map; a larger normal bias stops foliage acne from shimmering.
+    sun.shadow.normalBias = .05;
     const warm = new THREE.DirectionalLight(0xffc27a);
     warm.position.set(7, 5, 8);
     const world = new THREE.Group();
@@ -107,15 +108,15 @@ export function createStage(canvas, opts) {
         slot.scale.setScalar(s);
         parent.add(slot);
         ctx.track(load(path).then((model) => {
-            if (model) slot.add(prepare(model.clone(true)));
+            if (model) slot.add(prepare(model.clone(true), slot.userData.receiveShadow !== false));
         }));
         return slot;
     };
-    const prepare = (o) => {
+    const prepare = (o, receiveShadow) => {
         o.traverse((m) => {
             if (!m.isMesh) return;
             m.castShadow = true;
-            m.receiveShadow = true;
+            m.receiveShadow = receiveShadow;
             [].concat(m.material).forEach((mt) => {
                 if (!mt.color || mt.userData.graded) return;
                 mt.userData.graded = true;
