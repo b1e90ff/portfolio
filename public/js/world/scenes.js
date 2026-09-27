@@ -51,7 +51,7 @@ export function basecamp(ctx, o) {
     const [hx, hz] = at(T.fn, T.c, -.4, 1.05);
     const shedYaw = -.75;
     const shed = P.shed(ctx, g, hx, T.top, hz, shedYaw);
-    const nearShed = (x, z) => Math.hypot(x - hx, z - hz) < 1.2;
+    const nearShed = (x, z) => Math.hypot(x - hx, z - hz) < 1.7;
     const door = shed.userData.door;
     for (const [k, jitter] of [[.3, .15], [.72, -.2], [1.14, .1]]) {
         ctx.place('nature/path_stone', door.x, .005, door.z + k, jitter, .6, shed);
