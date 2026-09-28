@@ -50,6 +50,15 @@ test('short landscape screens get their own layout, taller ones keep theirs', ()
     assert.equal(layout(DESKTOP), 'wide');
 });
 
+test('layoutFor boundaries sit on the 3/2 aspect and the 500px height', () => {
+    assert.equal(layoutFor(800, 500), 'short');
+    assert.equal(layoutFor(800, 501), 'narrow');
+    assert.equal(layoutFor(750, 500), 'short');
+    assert.equal(layoutFor(749, 500), 'narrow');
+    assert.equal(layoutFor(500, 500), 'narrow');
+    assert.equal(layoutFor(412, 380), 'narrow');
+});
+
 test('short landscape frames the island left of the side panel', () => {
     const s = cameraState('about', PHONE_LANDSCAPE);
     assert.ok(s.offsetX < 0);

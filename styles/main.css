@@ -1171,7 +1171,7 @@
         transform: translateX(40px);
     }
 
-    @media (width <= 860px), (orientation: landscape) and (height <= 500px) {
+    @media (width <= 860px), (min-aspect-ratio: 3/2) and (height <= 500px) {
         :root {
             --gutter: 12px;
         }
@@ -1249,7 +1249,7 @@
         }
     }
 
-    @media (width <= 860px) and (orientation: portrait), (width <= 860px) and (height > 500px) {
+    @media (width <= 860px) and (aspect-ratio < 3/2), (width <= 860px) and (height > 500px) {
         .topbar {
             top: 12px;
         }
@@ -1281,10 +1281,6 @@
             justify-content: center;
         }
 
-        .panel {
-            --glass-strong: color-mix(in srgb, var(--sky-top) 82%, transparent);
-        }
-
         .dock {
             bottom: max(12px, env(safe-area-inset-bottom));
         }
@@ -1294,6 +1290,7 @@
         }
 
         .panel {
+            --glass-strong: color-mix(in srgb, var(--sky-top) 82%, transparent);
             top: auto;
             left: var(--gutter);
             right: var(--gutter);
@@ -1357,13 +1354,13 @@
         .modal-card {
             max-height: calc(100dvh - 24px);
         }
-
     }
 
-    @media (orientation: landscape) and (height <= 500px) {
+    @media (min-aspect-ratio: 3/2) and (height <= 500px) {
         :root {
             --edge-left: max(var(--gutter), env(safe-area-inset-left));
             --edge-right: max(var(--gutter), env(safe-area-inset-right));
+            --edge-bottom: max(var(--gutter), env(safe-area-inset-bottom));
             --rail: 52px;
         }
 
@@ -1375,10 +1372,12 @@
 
         .dock {
             left: var(--edge-left);
-            top: calc(50% + 24px);
-            bottom: auto;
+            top: 60px;
+            bottom: var(--edge-bottom);
+            height: fit-content;
+            margin-block: auto;
             flex-direction: column;
-            transform: translateY(-50%);
+            transform: none;
         }
 
         .dock a {
@@ -1409,7 +1408,7 @@
             top: 60px;
             right: var(--edge-right);
             width: min(460px, 50vw);
-            max-height: calc(100dvh - 60px - var(--gutter));
+            max-height: calc(100dvh - 60px - var(--edge-bottom));
         }
 
         .panel-head {
@@ -1425,18 +1424,27 @@
         }
 
         .modal {
-            padding: 8px;
+            padding: 8px var(--edge-right) var(--edge-bottom) var(--edge-left);
         }
 
         .modal-card {
-            max-height: calc(100dvh - 16px);
+            max-height: calc(100dvh - 8px - var(--edge-bottom));
         }
 
         .modal-scroll > img {
             height: 45dvh;
             aspect-ratio: auto;
         }
+    }
 
+    @media (min-aspect-ratio: 3/2) and (height <= 320px) {
+        .dock a {
+            padding-block: 6px;
+        }
+
+        .intro .eyebrow {
+            display: none;
+        }
     }
 
     @media (max-width: 380px) {
