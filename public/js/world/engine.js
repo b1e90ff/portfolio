@@ -27,7 +27,6 @@ const SKY_VERTEX = 'varying vec3 vP; void main(){ vP = normalize(position); gl_P
 const SKY_FRAGMENT = 'uniform vec3 top; uniform vec3 mid; uniform vec3 low; varying vec3 vP; void main(){ float k = smoothstep(-0.75, 0.25, vP.y); vec3 c = k < 0.45 ? mix(low, mid, smoothstep(0.0, 0.45, k)) : mix(mid, top, smoothstep(0.45, 1.0, k)); gl_FragColor = vec4(c, 1.0); }';
 
 export function createStage(canvas, opts) {
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const r = new THREE.WebGLRenderer({ canvas, antialias: true });
     r.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
     r.toneMapping = THREE.ACESFilmicToneMapping;
@@ -52,7 +51,7 @@ export function createStage(canvas, opts) {
     const world = new THREE.Group();
     scene.add(hemi, sun, sun.target, warm, world);
 
-    const ctx = { r, scene, cam, world, reduced, mode: opts.mode, blinkers: [], wags: [], windows: [], frames: [], clouds: [] };
+    const ctx = { r, scene, cam, world, mode: opts.mode, blinkers: [], wags: [], windows: [], frames: [], clouds: [] };
 
     ctx.flat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: .85, flatShading: true, ...o });
     ctx.emissive = (c, i = 2) => new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: i });
@@ -233,7 +232,7 @@ export function createStage(canvas, opts) {
     const frame = (t) => {
         const dt = Math.max(0, Math.min(.05, (t - last) / 1000));
         last = t;
-        ctx.view.yaw += (targetYaw - ctx.view.yaw) * (reduced ? 1 : .08);
+        ctx.view.yaw += (targetYaw - ctx.view.yaw) * .08;
         applyOffset();
         const v = ctx.view;
         cam.position.set(v.target.x + Math.sin(v.yaw) * v.dist, v.target.y + v.height, v.target.z + Math.cos(v.yaw) * v.dist);
@@ -242,20 +241,18 @@ export function createStage(canvas, opts) {
         scene.fog.far = Math.max(120, v.dist * 2.4);
         sky.position.copy(cam.position);
         stars.position.copy(cam.position);
-        if (!reduced) {
-            stars.rotation.y = t * .000008;
-            ctx.clouds.forEach((c) => {
-                c.position.x += dt * c.userData.speed;
-                if (c.position.x > c.userData.base + 30) c.position.x = c.userData.base - 30;
-            });
-        }
+        stars.rotation.y = t * .000008;
+        ctx.clouds.forEach((c) => {
+            c.position.x += dt * c.userData.speed;
+            if (c.position.x > c.userData.base + 30) c.position.x = c.userData.base - 30;
+        });
         ctx.wags.forEach((w) => {
-            const val = reduced ? 0 : Math.sin(t * w.rate) * w.amp;
+            const val = Math.sin(t * w.rate) * w.amp;
             if (w.axis === 'x') w.o.rotation.x = val;
             else w.o.rotation.y = val;
         });
         ctx.blinkers.forEach((b) => {
-            b.m.material.emissiveIntensity = reduced ? 2 : (Math.sin(t * b.rate + b.ph) > .1 ? 2.8 : .25);
+            b.m.material.emissiveIntensity = Math.sin(t * b.rate + b.ph) > .1 ? 2.8 : .25;
         });
         ctx.frames.forEach((fn) => fn(t, dt));
         r.render(scene, cam);

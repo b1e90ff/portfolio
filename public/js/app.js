@@ -78,7 +78,7 @@ function swapMain(doc) {
         main.replaceChildren(...[...next.childNodes].map((n) => document.importNode(n, true)));
         world?.setPanelCollapsed(false);
         const panel = main.querySelector('[data-panel]');
-        if (panel && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        if (panel) {
             panel.classList.add('is-entering');
             requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.remove('is-entering')));
         }

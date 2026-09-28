@@ -56,7 +56,6 @@ test('samples and centres are always walkable', () => {
 function fakeStage() {
     const frames = [];
     const ctx = {
-        reduced: false,
         onFrame: (fn) => frames.push(fn),
         add: (geo, mat, x = 0, y = 0, z = 0, parent) => {
             const m = new THREE.Mesh(geo, mat);

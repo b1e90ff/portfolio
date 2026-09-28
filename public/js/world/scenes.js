@@ -129,7 +129,7 @@ export function mini(ctx, o) {
 
 function bob(ctx, group, baseY, rate, amp, phase) {
     ctx.onFrame((t) => {
-        if (!ctx.reduced) group.position.y = baseY + Math.sin(t * rate + phase) * amp;
+        group.position.y = baseY + Math.sin(t * rate + phase) * amp;
     });
 }
 
