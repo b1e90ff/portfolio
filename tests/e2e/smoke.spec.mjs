@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { layoutFor } from '../../public/js/world/camera.js';
+
 const ISLAND_PAGES = ['/de-DE/basecamp', '/de-DE/projects', '/de-DE/about', '/de-DE/experience', '/de-DE/contact'];
 
 function collectErrors(page) {
@@ -83,10 +85,11 @@ test('island pages never overflow sideways', async ({ page }) => {
     }
 });
 
-test('the panel collapses on narrow screens only', async ({ page, isMobile }) => {
+test('the panel collapses on narrow screens only', async ({ page }) => {
     await openWorld(page, '/de-DE/about');
     const toggle = page.locator('[data-panel-toggle]');
-    if (!isMobile) {
+    const { width, height } = page.viewportSize();
+    if (layoutFor(width, height) !== 'narrow') {
         await expect(toggle).toBeHidden();
         return;
     }
@@ -95,6 +98,17 @@ test('the panel collapses on narrow screens only', async ({ page, isMobile }) =>
     await expect(page.locator('#panel-scroll')).toBeHidden();
     await toggle.click();
     await expect(page.locator('#panel-scroll')).toBeVisible();
+});
+
+test('short landscape screens put the dock beside the panel', async ({ page }) => {
+    const { width, height } = page.viewportSize();
+    test.skip(layoutFor(width, height) !== 'short', 'short landscape layout only');
+    await openWorld(page, '/de-DE/about');
+    const dock = await page.locator('.dock').boundingBox();
+    const panel = await page.locator('[data-panel]').boundingBox();
+    expect(dock.height).toBeGreaterThan(dock.width);
+    expect(panel.x).toBeGreaterThan(dock.x + dock.width);
+    expect(panel.y + panel.height).toBeLessThanOrEqual(height);
 });
 
 test.describe('without JavaScript', () => {

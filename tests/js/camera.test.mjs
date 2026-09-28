@@ -1,14 +1,16 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { ASIDE, ISLANDS, cameraState } from '../../public/js/world/camera.js';
+import { ASIDE, ISLANDS, cameraState, layoutFor } from '../../public/js/world/camera.js';
 
 const DESKTOP = { width: 1440, height: 900 };
 const PHONE = { width: 390, height: 844 };
+const PHONE_LANDSCAPE = { width: 844, height: 390 };
+const TABLET_LANDSCAPE = { width: 1180, height: 820 };
 
 test('every island and view resolves to a finite camera state', () => {
     for (const key of [...Object.keys(ISLANDS), 'overview', ASIDE]) {
-        for (const size of [DESKTOP, PHONE]) {
+        for (const size of [DESKTOP, PHONE, PHONE_LANDSCAPE]) {
             const s = cameraState(key, size);
             for (const n of [...s.target, s.dist, s.height, s.yaw, s.offsetX, s.offsetY]) assert.ok(Number.isFinite(n), key);
         }
@@ -36,4 +38,22 @@ test('collapsing the panel only reframes narrow screens', () => {
     const folded = cameraState('about', { ...PHONE, collapsed: true });
     assert.ok(folded.offsetY < open.offsetY);
     assert.ok(folded.dist < open.dist);
+});
+
+test('short landscape screens get their own layout, taller ones keep theirs', () => {
+    const layout = ({ width, height }) => layoutFor(width, height);
+    assert.equal(layout(PHONE), 'narrow');
+    assert.equal(layout(PHONE_LANDSCAPE), 'short');
+    assert.equal(layout({ width: 863, height: 360 }), 'short');
+    assert.equal(layout({ width: 800, height: 600 }), 'narrow');
+    assert.equal(layout(TABLET_LANDSCAPE), 'wide');
+    assert.equal(layout(DESKTOP), 'wide');
+});
+
+test('short landscape frames the island left of the side panel', () => {
+    const s = cameraState('about', PHONE_LANDSCAPE);
+    assert.ok(s.offsetX < 0);
+    assert.equal(s.offsetY, 0);
+    assert.deepEqual(cameraState('about', { ...PHONE_LANDSCAPE, collapsed: true }), s);
+    assert.ok(cameraState('overview', PHONE_LANDSCAPE).offsetX > cameraState('overview', DESKTOP).offsetX);
 });
