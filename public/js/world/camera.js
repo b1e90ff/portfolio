@@ -1,6 +1,7 @@
 export const OVERVIEW_YAW = -.5;
 export const NARROW = 860;
 export const SHORT = 500;
+export const SHORT_ASPECT = 1.5;
 export const ASIDE = 'overview-aside';
 
 export const ISLANDS = {
@@ -17,9 +18,9 @@ const FRAMING = {
     narrow: { fit: 1, overviewX: 0, overviewY: -.06, asideX: 0, asideY: .28, islandX: 0 },
 };
 
-/* Mirrors the CSS media queries: a short landscape screen wins over a narrow one. */
+/* Mirrors the CSS queries; the aspect floor keeps an open keyboard out of 'short'. */
 export function layoutFor(width, height) {
-    if (width > height && height <= SHORT) return 'short';
+    if (width >= height * SHORT_ASPECT && height <= SHORT) return 'short';
     return width <= NARROW ? 'narrow' : 'wide';
 }
 

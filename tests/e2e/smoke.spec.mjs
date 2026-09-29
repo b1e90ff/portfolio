@@ -111,6 +111,22 @@ test('short landscape screens put the dock beside the panel', async ({ page }) =
     expect(panel.y + panel.height).toBeLessThanOrEqual(height);
 });
 
+test('very low landscape screens keep the dock and legal links on screen', async ({ page }) => {
+    const { width, height } = page.viewportSize();
+    test.skip(layoutFor(width, height) !== 'short', 'short landscape layout only');
+    await page.setViewportSize({ width: 640, height: 280 });
+    await openWorld(page, '/de-DE');
+    const brand = await page.locator('.brand').boundingBox();
+    const dock = await page.locator('.dock').boundingBox();
+    expect(dock.y).toBeGreaterThanOrEqual(brand.y + brand.height);
+    expect(dock.y + dock.height).toBeLessThanOrEqual(280);
+    await expect(page.locator('.intro-foot a')).toHaveCount(2);
+    for (const link of await page.locator('.intro-foot a').all()) {
+        const box = await link.boundingBox();
+        expect(box.y + box.height).toBeLessThanOrEqual(280);
+    }
+});
+
 test.describe('when the OS asks for less motion', () => {
     test.use({ reducedMotion: 'reduce' });
 
