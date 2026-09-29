@@ -56,17 +56,12 @@ export function createWorld(canvas, { mood, island, labels, models, onPick }) {
         const from = { t: v.target.clone(), dist: v.dist, height: v.height, offsetX: v.offsetX, offsetY: v.offsetY };
         const fromYaw = ctx.getTargetYaw();
         current = key;
-        if (ctx.reduced) {
-            jump(key);
-            resolve();
-            return;
-        }
         const toYaw = fromYaw + angDiff(stateFor(key).yaw, fromYaw);
         flight = { from, fromYaw, toYaw, start: performance.now(), done: resolve };
     });
 
     const settle = (s, dt) => {
-        const k = ctx.reduced ? 1 : 1 - Math.exp(-dt * 5);
+        const k = 1 - Math.exp(-dt * 5);
         const v = ctx.view;
         v.target.lerp(s.t, k);
         v.dist += (s.dist - v.dist) * k;
@@ -156,7 +151,6 @@ export function createWorld(canvas, { mood, island, labels, models, onPick }) {
         }
     });
     const celebrate = () => {
-        if (ctx.reduced) return;
         planeT = 0;
         plane.visible = true;
     };

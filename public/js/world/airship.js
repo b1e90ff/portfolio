@@ -26,13 +26,11 @@ export function airship(ctx, { radius, height, speed }) {
     ship.scale.setScalar(.7);
     let angle = 2.2;
     ctx.onFrame((t, dt) => {
-        if (!ctx.reduced) {
-            angle += dt * speed;
-            prop.rotation.x += dt * 14;
-        }
+        angle += dt * speed;
+        prop.rotation.x += dt * 14;
         ship.position.set(Math.cos(angle) * radius, height + Math.sin(angle * 2) * .6, Math.sin(angle) * radius * .7);
         ship.rotation.y = -angle - Math.PI / 2;
-        ship.rotation.z = ctx.reduced ? 0 : Math.sin(t * .0007) * .04;
+        ship.rotation.z = Math.sin(t * .0007) * .04;
     });
     return ship;
 }

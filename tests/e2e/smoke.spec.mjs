@@ -127,6 +127,37 @@ test('very low landscape screens keep the dock and legal links on screen', async
     }
 });
 
+test.describe('when the OS asks for less motion', () => {
+    test.use({ reducedMotion: 'reduce' });
+
+    test('nothing gets switched off', async ({ page }) => {
+        await openWorld(page, '/de-DE');
+        const world = page.locator('#world');
+        const shot = () => world.screenshot({ animations: 'disabled', scale: 'css' });
+        // The canvas keeps settling briefly after load, so one differing pair proves nothing.
+        let previous = await shot();
+        for (let i = 0; i < 4; i++) {
+            await page.waitForTimeout(500);
+            const current = await shot();
+            expect(current.equals(previous), `frame ${i + 1} equals the one before`).toBe(false);
+            previous = current;
+        }
+        const duration = await page.locator('.lang a').first().evaluate((el) => getComputedStyle(el).transitionDuration);
+        expect(duration).not.toMatch(/^0s(, 0s)*$/);
+        expect(await page.locator('.pin-dot').first().evaluate((el) => getComputedStyle(el).animationName)).toBe('pulse');
+
+        await page.evaluate(() => {
+            window.__panelEntered = false;
+            new MutationObserver((records) => {
+                if (records.some((r) => r.target.classList?.contains('is-entering'))) window.__panelEntered = true;
+            }).observe(document.querySelector('main'), { subtree: true, attributes: true, attributeFilter: ['class'] });
+        });
+        await page.locator('.dock a[data-island="about"]').click();
+        await expect(page.locator('[data-panel]')).toBeVisible();
+        expect(await page.evaluate(() => window.__panelEntered)).toBe(true);
+    });
+});
+
 test.describe('without JavaScript', () => {
     test.use({ javaScriptEnabled: false });
 

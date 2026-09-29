@@ -120,12 +120,11 @@ export function sleepingHusky(ctx, parent, x, y, z, ry = 0, s = 1) {
         return sprite;
     });
     ctx.onFrame((t) => {
-        const breath = ctx.reduced ? 0 : Math.sin(t * .0022);
+        const breath = Math.sin(t * .0022);
         body.scale.y = 1 + breath * .06;
         head.position.y = .08 + breath * .004;
         zs.forEach((sprite) => {
             const k = (t * .00025 + sprite.userData.offset) % 1;
-            sprite.visible = !ctx.reduced;
             sprite.position.set(.2 + k * .12, .2 + k * .45, .06 + Math.sin(k * 6) * .04);
             sprite.scale.setScalar(.06 + k * .08);
             sprite.material.opacity = Math.sin(k * Math.PI) * .9;
@@ -305,7 +304,6 @@ export function playTogether(ctx, walk, specs, y) {
         return 'bow';
     };
     ctx.onFrame((t, dt) => {
-        if (ctx.reduced) return;
         timer -= dt;
         tagCooldown -= dt;
         if (timer <= 0) enter(afterwards());
@@ -424,10 +422,6 @@ export function playFetch(ctx, parent, walk, dog, y) {
     };
     const run = (dt, s, rate) => gait(a.dog, dt, Math.min(1, s.speed * 1.3), rate * .65);
     ctx.onFrame((t, dt) => {
-        if (ctx.reduced) {
-            ball.position.set(b.p.x, y + R, b.p.z);
-            return;
-        }
         if (state === 'fly' || state === 'chase') physics(dt);
         if (state === 'wait') {
             a.pitchTarget = -.25;

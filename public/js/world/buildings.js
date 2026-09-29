@@ -40,7 +40,7 @@ function smoke(ctx, parent, x, y, z) {
         return m;
     });
     ctx.onFrame((t) => puffs.forEach((m) => {
-        const p = ctx.reduced ? m.userData.o : (t * .00016 + m.userData.o) % 1;
+        const p = (t * .00016 + m.userData.o) % 1;
         m.position.set(x + Math.sin(p * 5) * .12, y + p * 1.6, z);
         m.scale.setScalar(.7 + p * 1.6);
         m.material.opacity = .75 * (1 - p);
@@ -249,22 +249,20 @@ export function campfire(ctx, parent, x, y, z) {
     const light = ctx.glowSpot(0, .45, 0, 0xff8a3d, 2.4, 6, f);
     const base = light.intensity;
     ctx.onFrame((t) => {
-        const calm = ctx.reduced;
         flames.forEach((m) => {
             const u = m.userData;
-            const k = calm ? 1 : .8 + .2 * Math.sin(t * u.rate + u.phase) + .08 * Math.sin(t * u.rate * 2.3 + u.phase);
+            const k = .8 + .2 * Math.sin(t * u.rate + u.phase) + .08 * Math.sin(t * u.rate * 2.3 + u.phase);
             m.scale.set(u.rad * (1.1 - k * .1), u.h / 2 * k, u.rad * (1.1 - k * .1));
-            m.rotation.set(calm ? 0 : Math.sin(t * .003 + u.phase) * .12, calm ? u.phase : t * .0015 + u.phase, 0);
+            m.rotation.set(Math.sin(t * .003 + u.phase) * .12, t * .0015 + u.phase, 0);
         });
         sparks.forEach((spark) => {
             const u = spark.userData;
             const k = (t * .00045 + u.offset) % 1;
-            spark.visible = !calm;
             spark.position.set(Math.sin(u.turn + k * 4) * u.drift, .2 + k * .9, Math.cos(u.turn + k * 4) * u.drift);
             spark.material.opacity = 1 - k;
             spark.rotation.set(k * 6, k * 4, 0);
         });
-        const flicker = calm ? 1 : .85 + .15 * Math.sin(t * .011) * Math.sin(t * .027);
+        const flicker = .85 + .15 * Math.sin(t * .011) * Math.sin(t * .027);
         light.intensity = base * flicker;
         glow.material.opacity = .55 + .25 * flicker;
     });

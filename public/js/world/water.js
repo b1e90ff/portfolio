@@ -111,12 +111,10 @@ export function waterfall(ctx, parent, x, z, top, bottom, a, w = .6, spill = 0, 
     const base = -h;
     const edge = bend + arc;
     ctx.onFrame((t) => {
-        if (!ctx.reduced) {
-            back.offset.y = (t * .0009) % 1;
-            front.offset.y = (t * .0016) % 1;
-        }
+        back.offset.y = (t * .0009) % 1;
+        front.offset.y = (t * .0016) % 1;
         for (const puff of foam) {
-            const k = ctx.reduced ? puff.userData.k : (t * .0005 + puff.userData.k) % 1;
+            const k = (t * .0005 + puff.userData.k) % 1;
             const u = puff.userData;
             if (o.mist) {
                 puff.position.set(u.x * (1 + k), base + h * .3 - k * h * .35, edge + .1 + k * .3);
@@ -145,6 +143,6 @@ export function stream(ctx, parent, sx, sz, ex, ez, y, width) {
     m.rotation.z = -Math.atan2(ez - sz, ex - sx);
     m.position.set((sx + ex) / 2, y, (sz + ez) / 2);
     parent.add(m);
-    ctx.onFrame((t) => { if (!ctx.reduced) tex.offset.y = -(t * .0005) % 1; });
+    ctx.onFrame((t) => { tex.offset.y = -(t * .0005) % 1; });
     return m;
 }
