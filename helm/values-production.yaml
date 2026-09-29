@@ -1,7 +1,7 @@
 web-service:
   image:
     repository: ghcr.io/b1e90ff/portfolio
-    tag: "2.1.0"
+    tag: "2.2.0"
     pullPolicy: IfNotPresent
   imagePullSecrets:
     - name: github-credentials
