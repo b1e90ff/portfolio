@@ -11,7 +11,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # Pinned: the package keeps its name when the repository is renamed.
+  IMAGE_NAME: b1e90ff/portfolio
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -D warnings
 
